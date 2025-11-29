@@ -30,11 +30,12 @@ function CoupleNodeComponent({ data }: CoupleNodeProps) {
     <div
       className={cn(
         'bg-surface rounded-2xl shadow-lg border-2 p-3 relative',
-        'flex gap-3',
+        'flex gap-3 cursor-pointer',
         'transition-all duration-200 ease-out',
+        'hover:shadow-xl hover:-translate-y-1',
         isSelected
           ? 'border-primary ring-2 ring-primary/30 ring-offset-2 shadow-primary/20 shadow-xl'
-          : 'border-border'
+          : 'border-border hover:border-muted'
       )}
     >
       {/* Hidden handles for edges */}
@@ -54,8 +55,9 @@ function CoupleNodeComponent({ data }: CoupleNodeProps) {
         className={cn(
           'flex flex-col items-center text-center gap-1 p-2 rounded-xl cursor-pointer min-w-[100px] relative',
           'transition-all duration-150',
+          'hover:bg-muted/50',
           person1IsMe && 'bg-amber-50 dark:bg-amber-900/30 ring-2 ring-amber-400 ring-inset',
-          person1Selected ? 'bg-primary/10' : !person1IsMe && 'hover:bg-background'
+          person1Selected && 'bg-muted/70'
         )}
         data-person-id={person1.id}
       >
@@ -83,8 +85,9 @@ function CoupleNodeComponent({ data }: CoupleNodeProps) {
         className={cn(
           'flex flex-col items-center text-center gap-1 p-2 rounded-xl cursor-pointer min-w-[100px] relative',
           'transition-all duration-150',
+          'hover:bg-muted/50',
           person2IsMe && 'bg-amber-50 dark:bg-amber-900/30 ring-2 ring-amber-400 ring-inset',
-          person2Selected ? 'bg-primary/10' : !person2IsMe && 'hover:bg-background'
+          person2Selected && 'bg-muted/70'
         )}
         data-person-id={person2.id}
       >

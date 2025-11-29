@@ -27,10 +27,10 @@ function PersonNodeComponent({ data }: PersonNodeProps) {
         'bg-surface rounded-2xl shadow-lg border-2 p-3 relative',
         'w-[140px] cursor-pointer',
         'transition-all duration-200 ease-out',
-        'hover:shadow-xl hover:-translate-y-1',
+        'hover:shadow-xl hover:-translate-y-1 hover:bg-muted/50',
         isMe && 'border-amber-400 bg-amber-50/50 dark:bg-amber-900/20',
         isSelected
-          ? 'border-primary ring-2 ring-primary/30 ring-offset-2 shadow-primary/20 shadow-xl scale-105'
+          ? 'border-primary ring-2 ring-primary/30 ring-offset-2 shadow-primary/20 shadow-xl scale-105 bg-muted/50'
           : !isMe && 'border-border hover:border-muted'
       )}
     >

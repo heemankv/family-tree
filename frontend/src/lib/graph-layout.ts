@@ -257,6 +257,8 @@ export function layoutFamilyTree(
     const isHighlighted = selectedPersonId !== null && (
       // Edge goes TO the selected person (from their parent)
       link.target === selectedPersonId ||
+      // Edge comes FROM parent of selected person
+      selectedParentIds.has(link.source) ||
       // Edge goes FROM the selected person (to their child)
       selectedChildIds.has(link.target)
     );
