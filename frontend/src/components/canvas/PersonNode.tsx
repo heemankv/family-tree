@@ -29,7 +29,7 @@ function PersonNodeComponent({ data }: PersonNodeProps) {
         'hover:shadow-xl hover:-translate-y-1',
         isMe && 'border-amber-400 bg-amber-50/50 dark:bg-amber-900/20',
         isSelected
-          ? 'border-primary ring-2 ring-primary/30 ring-offset-2 shadow-primary/20 shadow-xl -translate-y-1'
+          ? 'border-green-600 dark:border-green-500 shadow-xl -translate-y-1'
           : !isMe && 'border-border hover:border-muted'
       )}
     >

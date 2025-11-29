@@ -33,7 +33,7 @@ function CoupleNodeComponent({ data }: CoupleNodeProps) {
         'transition-all duration-200 ease-out',
         'hover:shadow-xl hover:-translate-y-1',
         isSelected
-          ? 'border-primary ring-2 ring-primary/30 ring-offset-2 shadow-primary/20 shadow-xl -translate-y-1'
+          ? 'border-green-600 dark:border-green-500 shadow-xl -translate-y-1'
           : 'border-border hover:border-muted'
       )}
     >

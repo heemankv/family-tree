@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { BottomSheet } from '@/components/layout/BottomSheet';
@@ -14,9 +13,8 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function HomePage() {
-  const router = useRouter();
   const isMobile = useIsMobile();
-  const { selectedPersonId } = useAppStore();
+  const selectedPersonId = useAppStore((state) => state.selectedPersonId);
 
   // Load initial tree data
   useTreeData();
@@ -24,12 +22,11 @@ export default function HomePage() {
   // Enable keyboard shortcuts
   useKeyboardShortcuts();
 
-  // Update URL when person is selected
+  // Update URL without navigation (shallow update) to preserve state
   useEffect(() => {
-    if (selectedPersonId) {
-      router.push(`/person/${selectedPersonId}`, { scroll: false });
-    }
-  }, [selectedPersonId, router]);
+    const newUrl = selectedPersonId ? `/person/${selectedPersonId}` : '/';
+    window.history.replaceState(null, '', newUrl);
+  }, [selectedPersonId]);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">

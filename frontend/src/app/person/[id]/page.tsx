@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { BottomSheet } from '@/components/layout/BottomSheet';
@@ -15,23 +15,22 @@ import { useAppStore } from '@/store/useAppStore';
 
 export default function PersonPage() {
   const params = useParams();
-  const router = useRouter();
   const personId = params.id as string;
   const isMobile = useIsMobile();
-  const { selectedPersonId, setSelectedPerson, nodes } = useAppStore();
+  const selectedPersonId = useAppStore((state) => state.selectedPersonId);
+  const setSelectedPerson = useAppStore((state) => state.setSelectedPerson);
+  const nodes = useAppStore((state) => state.nodes);
   const hasInitialized = useRef(false);
 
   // Load tree data - only once, always centered on "me-001"
-  // Don't pass personId here to avoid re-fetching on every person change
   useTreeData();
 
   // Enable keyboard shortcuts
   useKeyboardShortcuts();
 
-  // Set the person as selected when page loads (only for initial URL load)
+  // Set the person as selected when page loads via direct URL access
   useEffect(() => {
     if (personId && nodes.length > 0 && !hasInitialized.current) {
-      // Only set selection if this person exists in our data
       const personExists = nodes.some(n => n.id === personId);
       if (personExists) {
         setSelectedPerson(personId);
@@ -40,15 +39,13 @@ export default function PersonPage() {
     }
   }, [personId, nodes, setSelectedPerson]);
 
-  // Navigate to home when person is deselected
+  // Update URL without navigation (shallow update) to preserve state
   useEffect(() => {
-    if (selectedPersonId === null && hasInitialized.current) {
-      router.push('/', { scroll: false });
-    } else if (selectedPersonId && selectedPersonId !== personId && hasInitialized.current) {
-      // Navigate to new person's page when selection changes
-      router.replace(`/person/${selectedPersonId}`, { scroll: false });
+    if (hasInitialized.current) {
+      const newUrl = selectedPersonId ? `/person/${selectedPersonId}` : '/';
+      window.history.replaceState(null, '', newUrl);
     }
-  }, [selectedPersonId, personId, router]);
+  }, [selectedPersonId]);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
