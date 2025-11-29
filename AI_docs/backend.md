@@ -290,6 +290,9 @@ ADMIN_TOKEN=dev_admin_token_12345
 # Rate Limiting
 RATE_LIMIT_REQUESTS=5            # Max requests per window
 RATE_LIMIT_WINDOW_SECONDS=60     # Window duration in seconds
+
+# Local Network Access
+ALLOW_ALL_ORIGINS=true           # Enable for mobile testing on local network
 ```
 
 ---
@@ -369,6 +372,9 @@ AllowOrigins: []string{
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
 }
+
+// For local network access (mobile testing), use:
+AllowAllOrigins: true  // When ALLOW_ALL_ORIGINS=true in .env
 AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"}
 AllowCredentials: true
@@ -398,6 +404,14 @@ go run cmd/server/main.go
 cd backend
 go build -o family-tree-api cmd/server/main.go
 ./family-tree-api
+```
+
+### Local Network Access (Mobile Testing)
+```bash
+cd backend
+export ALLOW_ALL_ORIGINS=true
+go run cmd/server/main.go
+# Server accessible at http://<your-ip>:8080
 ```
 
 ---

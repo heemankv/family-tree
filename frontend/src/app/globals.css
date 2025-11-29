@@ -3,17 +3,17 @@
 @tailwind utilities;
 
 :root {
-  /* Light theme - subtle grays */
-  --background: #F5F5F5;
-  --surface: #FFFFFF;
+  /* Light theme - toned down, softer colors */
+  --background: #EBEBEB;
+  --surface: #F5F5F5;
   --foreground: #171717;
   --primary: #3B82F6;
   --accent: #8B5CF6;
   --muted: #6B7280;
-  --border: #E5E7EB;
-  --card-bg: #FFFFFF;
-  --card-border: #E5E7EB;
-  --dot-color: #D1D5DB;
+  --border: #D4D4D4;
+  --card-bg: #F5F5F5;
+  --card-border: #D4D4D4;
+  --dot-color: #C4C4C4;
   --edge-color: #9CA3AF;
   --edge-hover: #6B7280;
 }
@@ -67,6 +67,10 @@ body {
 }
 
 /* Highlighted edges (blood relation to selected person) */
+.react-flow__edge.highlighted-edge {
+  z-index: 1000 !important;
+}
+
 .react-flow__edge.highlighted-edge .react-flow__edge-path {
   stroke: #15803D;
   stroke-width: 3;

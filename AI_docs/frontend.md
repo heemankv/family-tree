@@ -18,9 +18,11 @@ The frontend is a Next.js 14 application using the App Router, React 18, TypeScr
 ## 2. Design Philosophy
 
 ### Aesthetic: "Clean & Architectural"
-- **Background**: Off-white (`#F5F5F5`) - mimics paper/drafting table
+- **Background**: Muted off-white (`#EBEBEB`) - toned-down paper aesthetic
+- **Surface**: Slightly lighter (`#F5F5F5`) - cards and panels
 - **Typography**: Inter or Geist Sans - clean, highly legible
 - **Inspiration**: Google Maps (interaction), macOS (glass-morphism modals)
+- **Theme**: Light/Dark mode support via CSS variables and Tailwind dark classes
 
 ### Responsive Behavior
 | Screen Size | Sidebar Behavior |
@@ -63,7 +65,8 @@ frontend/
 │   │       ├── Avatar.tsx
 │   │       ├── Badge.tsx
 │   │       ├── Button.tsx
-│   │       └── LoadingSpinner.tsx
+│   │       ├── LoadingSpinner.tsx
+│       └── RotateDevicePrompt.tsx   # Mobile portrait mode prompt
 │   ├── hooks/
 │   │   ├── useTreeData.ts            # Fetch & cache tree data
 │   │   ├── usePersonFamily.ts        # Fetch immediate family
@@ -203,10 +206,11 @@ interface AppState {
 
 - **Single nodes**: ~140px wide, for unmarried persons
 - **Couple nodes**: ~280px wide, groups spouses together
-- Avatar: Gender-based icon (no initials)
+- Avatar: Gender-based default images (`/images/default-avatar-male.png`, `/images/default-avatar-female.png`)
+- Avatar sizes: `sm: w-16`, `md: w-24`, `lg: w-32`, `xl: w-40`
 - Name: Truncated if long
 - Years: Birth-Death or Birth-present
-- Border: Highlighted when selected
+- Border: Green when selected, Amber for "me" indicator
 - Handles: Hidden (invisible)
 - Edges: Only parent→child connections (no spouse/sibling lines)
 
@@ -289,35 +293,49 @@ function layoutFamilyTree(persons: Person[], links: Link[], centerPersonId: stri
 
 ### Layout Constants
 ```typescript
-const ROW_HEIGHT = 200;    // Vertical spacing between generations
-const COUPLE_WIDTH = 280;  // Width of couple nodes
-const SINGLE_WIDTH = 160;  // Width of single person nodes
-const COL_GAP = 40;        // Gap between nodes
+const ROW_HEIGHT = 300;    // Vertical spacing between generations
+const COUPLE_WIDTH = 360;  // Width of couple nodes (increased for larger avatars)
+const SINGLE_WIDTH = 200;  // Width of single person nodes
+const COL_GAP = 60;        // Gap between nodes
 ```
+
+### Edge Configuration
+- **Edge Type**: `simplebezier` - clean curves that reduce visual overlap
+- **Highlighted Edges**: z-index: 1000, green stroke for blood relations
+- **Default Edges**: Gray stroke with lower z-index
 
 ---
 
 ## 9. Styling System (Tailwind)
 
-### Color Palette
+### Color Palette (CSS Variables)
 ```css
-/* tailwind.config.ts */
-colors: {
-  background: '#F5F5F5',      /* Off-white canvas */
-  surface: '#FFFFFF',          /* Cards, sidebar */
-  primary: '#3B82F6',          /* Blue - interactive */
-  accent: '#8B5CF6',           /* Purple - highlights */
-  muted: '#6B7280',            /* Gray - secondary text */
-  border: '#E5E7EB',           /* Light gray borders */
+/* globals.css - Light theme */
+:root {
+  --background: #EBEBEB;      /* Muted off-white canvas */
+  --surface: #F5F5F5;          /* Cards, sidebar */
+  --foreground: #1A1A1A;       /* Primary text */
+  --muted: #737373;            /* Secondary text */
+  --border: #D4D4D4;           /* Borders */
+}
+
+/* globals.css - Dark theme */
+.dark {
+  --background: #1A1A1A;
+  --surface: #262626;
+  --foreground: #F5F5F5;
+  --muted: #A3A3A3;
+  --border: #404040;
 }
 ```
 
 ### Component Classes
-- **Nodes**: `rounded-2xl shadow-lg border-2 bg-white`
-- **Connections**: `stroke-gray-400 stroke-2`
-- **Sidebar**: `bg-white shadow-2xl`
-- **Modal**: `backdrop-blur-xl bg-white/80 rounded-2xl`
-- **Selected**: `ring-2 ring-primary ring-offset-2`
+- **Nodes**: `rounded-2xl shadow-lg border-2 bg-surface`
+- **Connections**: `stroke-gray-400 stroke-2` (default), `stroke-green-700` (highlighted)
+- **Sidebar**: `bg-surface shadow-2xl`
+- **Modal**: `bg-surface rounded-2xl shadow-2xl border border-border`
+- **Selected Node**: `border-green-600 dark:border-green-500 shadow-xl -translate-y-1`
+- **"Me" Node**: `border-amber-400 dark:border-amber-500` (card border highlight)
 
 ---
 
@@ -388,6 +406,11 @@ const breakpoints = {
 - [x] `/` or `⌘K` - Open search
 - [x] `⌘⇧P` - Open query modal
 
+### Mobile Features ✅
+- [x] Rotate device prompt - shows in portrait mode suggesting landscape
+- [x] Bottom sheet for person details (Google Maps-style)
+- [x] Local network access for mobile testing
+
 ### Post-MVP Features (Not Implemented)
 - [ ] Mini-map overview
 - [ ] Generation labels on canvas
@@ -403,6 +426,16 @@ const breakpoints = {
 ```bash
 # .env.local
 NEXT_PUBLIC_API_URL=http://localhost:8080
+
+# For local network access (mobile testing)
+NEXT_PUBLIC_API_URL=http://<your-local-ip>:8080
+```
+
+### Running on Local Network
+```bash
+cd frontend
+NEXT_PUBLIC_API_URL=http://192.168.x.x:8080 npm run dev -- -H 0.0.0.0
+# Frontend accessible at http://<your-ip>:3000
 ```
 
 ---
@@ -415,7 +448,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
     "next": "^14.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "reactflow": "^11.10.0",
+    "@xyflow/react": "^12.0.0",    // React Flow (updated package name)
     "zustand": "^4.4.0",
     "lucide-react": "^0.300.0",
     "clsx": "^2.0.0",

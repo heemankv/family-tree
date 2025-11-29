@@ -2,10 +2,10 @@ import { Node, Edge } from '@xyflow/react';
 import { Person, Link, PersonNodeData, CoupleNodeData } from '@/types';
 
 // Layout constants
-const ROW_HEIGHT = 200;
-const COUPLE_WIDTH = 280;
-const SINGLE_WIDTH = 160;
-const COL_GAP = 40;
+const ROW_HEIGHT = 300;
+const COUPLE_WIDTH = 360;
+const SINGLE_WIDTH = 200;
+const COL_GAP = 60;
 
 type LayoutNode = Node<PersonNodeData | CoupleNodeData>;
 
@@ -267,8 +267,9 @@ export function layoutFamilyTree(
       id: `edge-${edgeKey}`,
       source: parentNodeId,
       target: childNodeId,
-      type: 'smoothstep',
+      type: 'simplebezier',
       className: isHighlighted ? 'highlighted-edge' : '',
+      zIndex: isHighlighted ? 1000 : 0,
       style: {
         strokeWidth: isHighlighted ? 3 : 2,
       },

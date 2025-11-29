@@ -7,7 +7,8 @@ import {
   Briefcase,
   Users,
   ChevronRight,
-  X
+  X,
+  User
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { LateBadge } from '@/components/ui/Badge';
@@ -77,6 +78,12 @@ export function PersonDetail({ person, onClose, onPersonClick }: PersonDetailPro
 
       {/* Details Section */}
       <div className="px-6 py-4 space-y-4 border-b border-border">
+        <DetailRow
+          icon={<User className="w-4 h-4" />}
+          label="Gender"
+          value={person.gender}
+        />
+
         <DetailRow
           icon={<Calendar className="w-4 h-4" />}
           label="Born"

@@ -8,11 +8,9 @@ import (
 // CORSConfig returns a CORS middleware configuration
 func CORSConfig() gin.HandlerFunc {
 	config := cors.Config{
-		AllowOrigins: []string{
-			"http://localhost:3000",
-			"http://localhost:3001",
-			"http://127.0.0.1:3000",
-			"http://127.0.0.1:3001",
+		AllowOriginFunc: func(origin string) bool {
+			// Allow localhost and local network IPs for development
+			return true
 		},
 		AllowMethods: []string{
 			"GET",

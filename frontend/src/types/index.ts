@@ -1,8 +1,14 @@
+// Gender type
+export type Gender = 'Male' | 'Female' | 'Other';
+
+// Relationship type
+export type RelationshipType = 'PARENT_CHILD' | 'SPOUSE' | 'SIBLING';
+
 // Person represents an individual in the family tree
 export interface Person {
   id: string;
   name: string;
-  gender: 'Male' | 'Female' | 'Other';
+  gender: Gender;
   is_alive: boolean;
   birth_date: string;
   death_date: string | null;
@@ -15,7 +21,7 @@ export interface Person {
 export interface Link {
   source: string;
   target: string;
-  relationship: 'PARENT_CHILD' | 'SPOUSE' | 'SIBLING';
+  relationship: RelationshipType;
   start_date?: string;
   end_date?: string;
 }
@@ -50,14 +56,14 @@ export interface ApiError {
   };
 }
 
-// React Flow node data
-export interface PersonNodeData {
+// React Flow node data - extends Record for compatibility
+export interface PersonNodeData extends Record<string, unknown> {
   person: Person;
   isSelected: boolean;
 }
 
-// Couple node data
-export interface CoupleNodeData {
+// Couple node data - extends Record for compatibility
+export interface CoupleNodeData extends Record<string, unknown> {
   person1: Person;
   person2: Person;
   isSelected: boolean;

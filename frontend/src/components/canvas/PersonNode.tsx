@@ -9,64 +9,73 @@ import { cn, getYearsDisplay, truncate } from '@/lib/utils';
 import { ME_PERSON_ID } from '@/lib/constants';
 import { Person } from '@/types';
 
+// Style constants
+const CARD_BASE_STYLES = [
+  'bg-surface rounded-2xl shadow-lg border-2 p-4 relative',
+  'w-[160px] cursor-pointer',
+  'transition-all duration-200 ease-out',
+  'hover:shadow-xl hover:-translate-y-1',
+] as const;
+
+const CARD_SELECTED_STYLES = 'border-green-600 dark:border-green-500 shadow-xl -translate-y-1';
+const CARD_ME_STYLES = 'border-amber-400 dark:border-amber-500';
+const CARD_DEFAULT_STYLES = 'border-border hover:border-muted';
+
+const ME_BADGE_STYLES = [
+  'absolute -top-2 -right-2',
+  'bg-amber-400 text-amber-900',
+  'text-[10px] font-bold px-1.5 py-0.5',
+  'rounded-full flex items-center gap-0.5 shadow-sm',
+].join(' ');
+
+const HANDLE_STYLES = '!opacity-0 !w-0 !h-0';
+
+const NAME_MAX_LENGTH = 18;
+
+// Types
+interface PersonNodeData {
+  person: Person;
+  isSelected: boolean;
+}
+
 interface PersonNodeProps {
-  data: {
-    person: Person;
-    isSelected: boolean;
-  };
+  data: PersonNodeData;
+}
+
+// Helper to get card border styles based on state
+function getCardBorderStyles(isSelected: boolean, isMe: boolean): string {
+  if (isSelected) return CARD_SELECTED_STYLES;
+  if (isMe) return CARD_ME_STYLES;
+  return CARD_DEFAULT_STYLES;
 }
 
 function PersonNodeComponent({ data }: PersonNodeProps) {
   const { person, isSelected } = data;
   const isMe = person.id === ME_PERSON_ID;
+  const cardBorderStyles = getCardBorderStyles(isSelected, isMe);
 
   return (
-    <div
-      className={cn(
-        'bg-surface rounded-2xl shadow-lg border-2 p-3 relative',
-        'w-[140px] cursor-pointer',
-        'transition-all duration-200 ease-out',
-        'hover:shadow-xl hover:-translate-y-1',
-        isMe && 'border-amber-400 bg-amber-50/50 dark:bg-amber-900/20',
-        isSelected
-          ? 'border-green-600 dark:border-green-500 shadow-xl -translate-y-1'
-          : !isMe && 'border-border hover:border-muted'
-      )}
-    >
-      {/* "You" marker for me */}
+    <div className={cn(CARD_BASE_STYLES, cardBorderStyles)}>
       {isMe && (
-        <div className="absolute -top-2 -right-2 bg-amber-400 text-amber-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
+        <div className={ME_BADGE_STYLES}>
           <Star className="w-2.5 h-2.5 fill-current" />
           You
         </div>
       )}
-      {/* Hidden handles for edges */}
-      <Handle
-        type="target"
-        position={Position.Top}
-        className="!opacity-0 !w-0 !h-0"
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="!opacity-0 !w-0 !h-0"
-      />
 
-      {/* Content */}
+      <Handle type="target" position={Position.Top} className={HANDLE_STYLES} />
+      <Handle type="source" position={Position.Bottom} className={HANDLE_STYLES} />
+
       <div className="flex flex-col items-center text-center gap-2">
-        {/* Avatar */}
         <Avatar person={person} size="md" />
 
-        {/* Name and Badge */}
         <div className="flex flex-col items-center gap-1">
           <span className="font-medium text-sm text-foreground leading-tight">
-            {truncate(person.name, 18)}
+            {truncate(person.name, NAME_MAX_LENGTH)}
           </span>
-
           {!person.is_alive && <LateBadge />}
         </div>
 
-        {/* Years */}
         <span className="text-xs text-muted">
           {getYearsDisplay(person)}
         </span>
@@ -75,10 +84,12 @@ function PersonNodeComponent({ data }: PersonNodeProps) {
   );
 }
 
-export const PersonNode = memo(PersonNodeComponent, (prevProps, nextProps) => {
-  // Re-render when isSelected changes
+// Custom comparison for memo
+function arePropsEqual(prevProps: PersonNodeProps, nextProps: PersonNodeProps): boolean {
   return (
     prevProps.data.isSelected === nextProps.data.isSelected &&
     prevProps.data.person.id === nextProps.data.person.id
   );
-});
+}
+
+export const PersonNode = memo(PersonNodeComponent, arePropsEqual);

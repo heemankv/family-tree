@@ -1,44 +1,52 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Play, Loader2 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
+// Constants
+const DEFAULT_QUERY = 'MATCH (n:Person) RETURN n LIMIT 5';
+
+// Styles
+const MODAL_STYLES = [
+  'w-full max-w-2xl',
+  'bg-surface rounded-2xl shadow-2xl',
+  'border border-border',
+  'pointer-events-auto',
+  'animate-scale-in',
+] as const;
+
+const HEADER_STYLES = 'flex items-center justify-between px-6 py-4 border-b border-border';
+const TITLE_STYLES = 'text-lg font-semibold text-foreground';
+
+const TEXTAREA_STYLES = [
+  'w-full h-24 px-4 py-3 rounded-xl',
+  'bg-background border-2 border-border',
+  'text-foreground font-mono text-sm',
+  'placeholder:text-muted',
+  'focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20',
+  'transition-all duration-200',
+  'resize-none',
+] as const;
+
+const KBD_STYLES = 'px-1.5 py-0.5 rounded bg-muted/30 font-mono text-foreground';
+
+const RESULT_SUCCESS_STYLES = 'bg-background border border-border rounded-xl overflow-hidden';
+const RESULT_ERROR_STYLES = 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl overflow-hidden';
+const ERROR_TEXT_STYLES = 'text-red-700 dark:text-red-400';
+
 export function QueryModal() {
   const { queryModalOpen, setQueryModalOpen } = useAppStore();
-  const [query, setQuery] = useState('MATCH (n:Person) RETURN n LIMIT 5');
+  const [query, setQuery] = useState(DEFAULT_QUERY);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Focus input when modal opens
-  useEffect(() => {
-    if (queryModalOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [queryModalOpen]);
-
-  // Handle escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && queryModalOpen) {
-        setQueryModalOpen(false);
-      }
-      // Cmd/Ctrl + Enter to execute
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && queryModalOpen) {
-        handleExecute();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [queryModalOpen, query]);
-
-  const handleExecute = async () => {
+  const handleExecute = useCallback(async () => {
     if (!query.trim()) return;
 
     setLoading(true);
@@ -54,11 +62,36 @@ export function QueryModal() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [query]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setQueryModalOpen(false);
-  };
+  }, [setQueryModalOpen]);
+
+  // Focus input when modal opens
+  useEffect(() => {
+    if (queryModalOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [queryModalOpen]);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!queryModalOpen) return;
+
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        handleExecute();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [queryModalOpen, handleClose, handleExecute]);
 
   if (!queryModalOpen) {
     return null;
@@ -75,19 +108,13 @@ export function QueryModal() {
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
-          className={cn(
-            'w-full max-w-2xl bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl',
-            'pointer-events-auto',
-            'animate-scale-in'
-          )}
+          className={cn(MODAL_STYLES)}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200/50">
+          <div className={HEADER_STYLES}>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                Cypher Query
-              </h2>
+              <h2 className={TITLE_STYLES}>Cypher Query</h2>
               <p className="text-sm text-muted">
                 Execute queries against the Neo4j database
               </p>
@@ -99,29 +126,17 @@ export function QueryModal() {
 
           {/* Query Input */}
           <div className="p-6 space-y-4">
-            <div className="relative">
-              <textarea
-                ref={inputRef}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="MATCH (n:Person) RETURN n LIMIT 10"
-                className={cn(
-                  'w-full h-24 px-4 py-3 rounded-xl',
-                  'bg-gray-50 border-2 border-gray-200',
-                  'font-mono text-sm',
-                  'focus:outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-100',
-                  'transition-all duration-200',
-                  'resize-none'
-                )}
-              />
-
-              {/* Glow effect when focused */}
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 opacity-0 focus-within:opacity-100 -z-10 blur-xl transition-opacity" />
-            </div>
+            <textarea
+              ref={inputRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="MATCH (n:Person) RETURN n LIMIT 10"
+              className={cn(TEXTAREA_STYLES)}
+            />
 
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted">
-                Press <kbd className="px-1.5 py-0.5 rounded bg-gray-100 font-mono">⌘</kbd> + <kbd className="px-1.5 py-0.5 rounded bg-gray-100 font-mono">Enter</kbd> to execute
+                Press <kbd className={KBD_STYLES}>⌘</kbd> + <kbd className={KBD_STYLES}>Enter</kbd> to execute
               </p>
               <Button
                 onClick={handleExecute}
@@ -141,19 +156,14 @@ export function QueryModal() {
           {/* Results */}
           {(result || error) && (
             <div className="px-6 pb-6">
-              <div
-                className={cn(
-                  'rounded-xl overflow-hidden',
-                  error ? 'bg-red-50 border border-red-200' : 'code-block'
-                )}
-              >
+              <div className={error ? RESULT_ERROR_STYLES : RESULT_SUCCESS_STYLES}>
                 {error ? (
-                  <div className="p-4 text-red-700 text-sm">
+                  <div className={cn('p-4 text-sm', ERROR_TEXT_STYLES)}>
                     <p className="font-medium">Error</p>
                     <p>{error}</p>
                   </div>
                 ) : (
-                  <pre className="p-4 overflow-x-auto max-h-80 text-sm">
+                  <pre className="p-4 overflow-x-auto max-h-80 text-sm text-foreground font-mono">
                     {result}
                   </pre>
                 )}

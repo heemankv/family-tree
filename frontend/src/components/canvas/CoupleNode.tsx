@@ -9,112 +9,123 @@ import { cn, getYearsDisplay, truncate } from '@/lib/utils';
 import { ME_PERSON_ID } from '@/lib/constants';
 import { Person } from '@/types';
 
-interface CoupleNodeProps {
-  data: {
-    person1: Person;
-    person2: Person;
-    isSelected: boolean;
-    selectedPersonId: string | null;
-  };
+// Style constants
+const CARD_BASE_STYLES = [
+  'bg-surface rounded-2xl shadow-lg border-2 p-4 relative',
+  'flex gap-4 cursor-pointer',
+  'transition-all duration-200 ease-out',
+  'hover:shadow-xl hover:-translate-y-1',
+] as const;
+
+const CARD_SELECTED_STYLES = 'border-green-600 dark:border-green-500 shadow-xl -translate-y-1';
+const CARD_ME_STYLES = 'border-amber-400 dark:border-amber-500';
+const CARD_DEFAULT_STYLES = 'border-border hover:border-muted';
+
+const PERSON_BASE_STYLES = [
+  'flex flex-col items-center text-center gap-2 p-2 rounded-xl cursor-pointer min-w-[110px] relative',
+  'transition-all duration-150',
+  'hover:bg-muted/50',
+] as const;
+
+const PERSON_SELECTED_STYLES = 'bg-muted/70';
+
+const ME_BADGE_STYLES = 'absolute -top-1.5 -right-1.5 bg-amber-400 text-amber-900 p-1 rounded-full shadow-sm z-10';
+const HANDLE_STYLES = '!opacity-0 !w-0 !h-0';
+const DIVIDER_STYLES = 'w-px bg-border self-stretch my-2';
+
+const NAME_MAX_LENGTH = 14;
+
+// Types
+interface CoupleNodeData {
+  person1: Person;
+  person2: Person;
+  isSelected: boolean;
+  selectedPersonId: string | null;
 }
 
-function CoupleNodeComponent({ data }: CoupleNodeProps) {
-  const { person1, person2, isSelected, selectedPersonId } = data;
-  const person1Selected = selectedPersonId === person1.id;
-  const person2Selected = selectedPersonId === person2.id;
-  const person1IsMe = person1.id === ME_PERSON_ID;
-  const person2IsMe = person2.id === ME_PERSON_ID;
+interface CoupleNodeProps {
+  data: CoupleNodeData;
+}
 
+interface PersonState {
+  person: Person;
+  isSelected: boolean;
+  isMe: boolean;
+}
+
+// Helper functions
+function getCardBorderStyles(isSelected: boolean, hasMe: boolean): string {
+  if (isSelected) return CARD_SELECTED_STYLES;
+  if (hasMe) return CARD_ME_STYLES;
+  return CARD_DEFAULT_STYLES;
+}
+
+function getPersonStyles(isSelected: boolean): string {
+  return cn(PERSON_BASE_STYLES, isSelected && PERSON_SELECTED_STYLES);
+}
+
+// Sub-component for individual person in couple
+function PersonCard({ person, isSelected, isMe }: PersonState) {
   return (
     <div
-      className={cn(
-        'bg-surface rounded-2xl shadow-lg border-2 p-3 relative',
-        'flex gap-3 cursor-pointer',
-        'transition-all duration-200 ease-out',
-        'hover:shadow-xl hover:-translate-y-1',
-        isSelected
-          ? 'border-green-600 dark:border-green-500 shadow-xl -translate-y-1'
-          : 'border-border hover:border-muted'
-      )}
+      className={getPersonStyles(isSelected)}
+      data-person-id={person.id}
     >
-      {/* Hidden handles for edges */}
-      <Handle
-        type="target"
-        position={Position.Top}
-        className="!opacity-0 !w-0 !h-0"
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="!opacity-0 !w-0 !h-0"
-      />
-
-      {/* Person 1 */}
-      <div
-        className={cn(
-          'flex flex-col items-center text-center gap-1 p-2 rounded-xl cursor-pointer min-w-[100px] relative',
-          'transition-all duration-150',
-          'hover:bg-muted/50',
-          person1IsMe && 'bg-amber-50 dark:bg-amber-900/30 ring-2 ring-amber-400 ring-inset',
-          person1Selected && 'bg-muted/70'
-        )}
-        data-person-id={person1.id}
-      >
-        {/* Star marker for "me" person */}
-        {person1IsMe && (
-          <div className="absolute -top-1.5 -right-1.5 bg-amber-400 text-amber-900 p-1 rounded-full shadow-sm z-10">
-            <Star className="w-2.5 h-2.5 fill-current" />
-          </div>
-        )}
-        <Avatar person={person1} size="sm" />
-        <span className="font-medium text-sm text-foreground leading-tight">
-          {truncate(person1.name, 14)}
-        </span>
-        {!person1.is_alive && <LateBadge />}
-        <span className="text-xs text-muted">
-          {getYearsDisplay(person1)}
-        </span>
-      </div>
-
-      {/* Divider */}
-      <div className="w-px bg-border self-stretch my-2" />
-
-      {/* Person 2 */}
-      <div
-        className={cn(
-          'flex flex-col items-center text-center gap-1 p-2 rounded-xl cursor-pointer min-w-[100px] relative',
-          'transition-all duration-150',
-          'hover:bg-muted/50',
-          person2IsMe && 'bg-amber-50 dark:bg-amber-900/30 ring-2 ring-amber-400 ring-inset',
-          person2Selected && 'bg-muted/70'
-        )}
-        data-person-id={person2.id}
-      >
-        {/* Star marker for "me" person */}
-        {person2IsMe && (
-          <div className="absolute -top-1.5 -right-1.5 bg-amber-400 text-amber-900 p-1 rounded-full shadow-sm z-10">
-            <Star className="w-2.5 h-2.5 fill-current" />
-          </div>
-        )}
-        <Avatar person={person2} size="sm" />
-        <span className="font-medium text-sm text-foreground leading-tight">
-          {truncate(person2.name, 14)}
-        </span>
-        {!person2.is_alive && <LateBadge />}
-        <span className="text-xs text-muted">
-          {getYearsDisplay(person2)}
-        </span>
-      </div>
+      {isMe && (
+        <div className={ME_BADGE_STYLES}>
+          <Star className="w-2.5 h-2.5 fill-current" />
+        </div>
+      )}
+      <Avatar person={person} size="md" />
+      <span className="font-medium text-sm text-foreground leading-tight">
+        {truncate(person.name, NAME_MAX_LENGTH)}
+      </span>
+      {!person.is_alive && <LateBadge />}
+      <span className="text-xs text-muted">
+        {getYearsDisplay(person)}
+      </span>
     </div>
   );
 }
 
-export const CoupleNode = memo(CoupleNodeComponent, (prevProps, nextProps) => {
-  // Re-render when selection changes
+function CoupleNodeComponent({ data }: CoupleNodeProps) {
+  const { person1, person2, isSelected, selectedPersonId } = data;
+
+  const person1State: PersonState = {
+    person: person1,
+    isSelected: selectedPersonId === person1.id,
+    isMe: person1.id === ME_PERSON_ID,
+  };
+
+  const person2State: PersonState = {
+    person: person2,
+    isSelected: selectedPersonId === person2.id,
+    isMe: person2.id === ME_PERSON_ID,
+  };
+
+  const hasMe = person1State.isMe || person2State.isMe;
+  const cardBorderStyles = getCardBorderStyles(isSelected, hasMe);
+
+  return (
+    <div className={cn(CARD_BASE_STYLES, cardBorderStyles)}>
+      <Handle type="target" position={Position.Top} className={HANDLE_STYLES} />
+      <Handle type="source" position={Position.Bottom} className={HANDLE_STYLES} />
+
+      <PersonCard {...person1State} />
+      <div className={DIVIDER_STYLES} />
+      <PersonCard {...person2State} />
+    </div>
+  );
+}
+
+// Custom comparison for memo
+function arePropsEqual(prevProps: CoupleNodeProps, nextProps: CoupleNodeProps): boolean {
   return (
     prevProps.data.isSelected === nextProps.data.isSelected &&
     prevProps.data.selectedPersonId === nextProps.data.selectedPersonId &&
     prevProps.data.person1.id === nextProps.data.person1.id &&
     prevProps.data.person2.id === nextProps.data.person2.id
   );
-});
+}
+
+export const CoupleNode = memo(CoupleNodeComponent, arePropsEqual);

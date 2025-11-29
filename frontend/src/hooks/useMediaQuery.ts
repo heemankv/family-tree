@@ -38,3 +38,11 @@ export function useIsTablet(): boolean {
 export function useIsDesktop(): boolean {
   return useMediaQuery('(min-width: 1024px)');
 }
+
+export function useIsPortrait(): boolean {
+  return useMediaQuery('(orientation: portrait)');
+}
+
+export function useIsLandscape(): boolean {
+  return useMediaQuery('(orientation: landscape)');
+}

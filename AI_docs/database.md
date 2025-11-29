@@ -36,6 +36,14 @@ Every individual in the tree is a node with the label `:Person`.
 | `profession` | String | Job title or "Retired", "Student" | Yes |
 | `photo_url` | String | URL to image or empty string | Yes |
 
+### Gender Values
+The `gender` property uses exact string values:
+- `"Male"` - Used for male individuals
+- `"Female"` - Used for female individuals  
+- `"Other"` - Used for non-binary or unspecified
+
+**Note**: Frontend relies on exact case-sensitive matching for gender-based default avatars.
+
 ### Example Node
 ```cypher
 CREATE (p:Person {

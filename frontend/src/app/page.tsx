@@ -7,6 +7,7 @@ import { BottomSheet } from '@/components/layout/BottomSheet';
 import { FamilyTreeCanvas } from '@/components/canvas/FamilyTreeCanvas';
 import { QueryModal } from '@/components/modals/QueryModal';
 import { SearchModal } from '@/components/modals/SearchModal';
+import { RotateDevicePrompt } from '@/components/ui/RotateDevicePrompt';
 import { useTreeData } from '@/hooks/useTreeData';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -44,6 +45,7 @@ export default function HomePage() {
 
       <QueryModal />
       <SearchModal />
+      <RotateDevicePrompt />
     </div>
   );
 }

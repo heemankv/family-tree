@@ -1,57 +1,74 @@
 'use client';
 
-import { memo } from 'react';
-import { User } from 'lucide-react';
-import { cn, getAvatarColor } from '@/lib/utils';
-import { Person } from '@/types';
+import { memo, useState, useCallback } from 'react';
+import { cn } from '@/lib/utils';
+import { Person, Gender } from '@/types';
 
+// Size configuration
+type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
+
+const SIZE_CLASSES: Record<AvatarSize, string> = {
+  sm: 'w-16 h-16',
+  md: 'w-24 h-24',
+  lg: 'w-32 h-32',
+  xl: 'w-40 h-40',
+} as const;
+
+// Image paths
+const IMAGES_PATH = '/images/';
+const DEFAULT_AVATARS: Record<Gender, string> = {
+  Male: '/images/default-avatar-male.png',
+  Female: '/images/default-avatar-female.png',
+  Other: '/images/default-avatar-male.png',
+} as const;
+
+// Types
 interface AvatarProps {
   person: Person;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: AvatarSize;
   className?: string;
 }
 
-const sizeClasses = {
-  sm: 'w-8 h-8',
-  md: 'w-12 h-12',
-  lg: 'w-16 h-16',
-  xl: 'w-24 h-24',
-};
+// Helper functions
+function getDefaultAvatar(gender: Gender): string {
+  return DEFAULT_AVATARS[gender] || DEFAULT_AVATARS.Male;
+}
 
-const iconSizeClasses = {
-  sm: 'w-4 h-4',
-  md: 'w-6 h-6',
-  lg: 'w-8 h-8',
-  xl: 'w-12 h-12',
-};
-
-export const Avatar = memo(function Avatar({ person, size = 'md', className }: AvatarProps) {
-  const colorClass = getAvatarColor(person.gender);
-
-  if (person.photo_url) {
-    return (
-      <img
-        src={person.photo_url}
-        alt={person.name}
-        className={cn(
-          'rounded-full object-cover',
-          sizeClasses[size],
-          className
-        )}
-      />
-    );
+function resolveImageSrc(photoUrl: string | undefined, gender: Gender): string {
+  if (!photoUrl) {
+    return getDefaultAvatar(gender);
   }
 
+  if (photoUrl.startsWith('/')) {
+    return photoUrl;
+  }
+
+  return `${IMAGES_PATH}${photoUrl}`;
+}
+
+function AvatarComponent({ person, size = 'md', className }: AvatarProps) {
+  const [hasError, setHasError] = useState(false);
+
+  const imageSrc = hasError
+    ? getDefaultAvatar(person.gender)
+    : resolveImageSrc(person.photo_url, person.gender);
+
+  const handleError = useCallback(() => {
+    setHasError(true);
+  }, []);
+
   return (
-    <div
+    <img
+      src={imageSrc}
+      alt={person.name}
+      onError={handleError}
       className={cn(
-        'rounded-full flex items-center justify-center',
-        sizeClasses[size],
-        colorClass,
+        'rounded-full object-cover',
+        SIZE_CLASSES[size],
         className
       )}
-    >
-      <User className={cn(iconSizeClasses[size], 'opacity-70')} />
-    </div>
+    />
   );
-});
+}
+
+export const Avatar = memo(AvatarComponent);
