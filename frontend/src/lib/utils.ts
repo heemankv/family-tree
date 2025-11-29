@@ -7,10 +7,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Check if a date string is valid
+function isValidDate(date: Date): boolean {
+  return date instanceof Date && !isNaN(date.getTime());
+}
+
 // Calculate age from birth date
 export function calculateAge(birthDate: string, deathDate?: string | null): number {
   const birth = new Date(birthDate);
   const end = deathDate ? new Date(deathDate) : new Date();
+
+  if (!isValidDate(birth) || (deathDate && !isValidDate(end))) {
+    return 0;
+  }
 
   let age = end.getFullYear() - birth.getFullYear();
   const monthDiff = end.getMonth() - birth.getMonth();
@@ -25,6 +34,9 @@ export function calculateAge(birthDate: string, deathDate?: string | null): numb
 // Format date for display
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
+  if (!isValidDate(date)) {
+    return 'Unknown';
+  }
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -34,7 +46,11 @@ export function formatDate(dateString: string): string {
 
 // Get year from date string
 export function getYear(dateString: string): string {
-  return new Date(dateString).getFullYear().toString();
+  const date = new Date(dateString);
+  if (!isValidDate(date)) {
+    return '?';
+  }
+  return date.getFullYear().toString();
 }
 
 // Get years display (birth - death or birth - present)

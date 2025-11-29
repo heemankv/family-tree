@@ -20,6 +20,7 @@ import { layoutFamilyTree } from '@/lib/graph-layout';
 import { useAppStore } from '@/store/useAppStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ME_PERSON_ID } from '@/lib/constants';
 
 // Register custom node types
 const nodeTypes = {
@@ -27,17 +28,13 @@ const nodeTypes = {
   coupleNode: CoupleNode,
 };
 
-// Fixed center node for consistent layout - never changes
-const LAYOUT_CENTER_NODE = 'me-001';
-
 function FamilyTreeCanvasInner() {
-  const {
-    nodes: storeNodes,
-    links,
-    selectedPersonId,
-    setSelectedPerson,
-    isLoading,
-  } = useAppStore();
+  // Use individual selectors to prevent unnecessary re-renders
+  const storeNodes = useAppStore((state) => state.nodes);
+  const links = useAppStore((state) => state.links);
+  const selectedPersonId = useAppStore((state) => state.selectedPersonId);
+  const setSelectedPerson = useAppStore((state) => state.setSelectedPerson);
+  const isLoading = useAppStore((state) => state.isLoading);
 
   const isMobile = useIsMobile();
   const { fitView, zoomIn, zoomOut } = useReactFlow();
@@ -81,7 +78,7 @@ function FamilyTreeCanvasInner() {
   // Calculate layout - use fixed center node to prevent layout shifts
   // Only storeNodes, links changes should trigger full re-layout
   const { nodes: layoutNodes, edges: layoutEdges } = useMemo(() => {
-    return layoutFamilyTree(storeNodes, links, LAYOUT_CENTER_NODE, null);
+    return layoutFamilyTree(storeNodes, links, ME_PERSON_ID, null);
   }, [storeNodes, links]);
 
   // React Flow state
@@ -138,21 +135,28 @@ function FamilyTreeCanvasInner() {
         if (node.type === 'coupleNode') {
           const data = node.data as { person1: { id: string }; person2: { id: string } };
           const isSelected = selectedPersonId === data.person1.id || selectedPersonId === data.person2.id;
+          // Create new node object to trigger React Flow re-render
           return {
             ...node,
+            id: node.id, // Ensure id stays the same
             data: {
               ...node.data,
               isSelected,
               selectedPersonId,
             },
+            // Force React Flow to detect the change
+            selected: isSelected,
           };
         } else {
+          const isSelected = node.id === selectedPersonId;
           return {
             ...node,
+            id: node.id,
             data: {
               ...node.data,
-              isSelected: node.id === selectedPersonId,
+              isSelected,
             },
+            selected: isSelected,
           };
         }
       })

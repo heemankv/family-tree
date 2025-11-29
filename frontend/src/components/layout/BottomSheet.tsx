@@ -98,6 +98,9 @@ export function BottomSheet() {
       {/* Bottom Sheet */}
       <div
         ref={sheetRef}
+        role="dialog"
+        aria-label={`Details for ${selectedPerson.name}`}
+        aria-modal="true"
         className={cn(
           'fixed bottom-0 left-0 right-0 bg-surface z-50',
           'rounded-t-3xl shadow-2xl',
@@ -137,13 +140,19 @@ export function BottomSheet() {
           {/* Full Header with Close */}
           {sheetState === 'full' && (
             <div className="px-4 pb-2 flex items-center justify-between">
-              <button onClick={() => setSheetState('half')}>
+              <button
+                onClick={() => setSheetState('half')}
+                aria-label="Minimize panel"
+              >
                 <ChevronDown className="w-5 h-5 text-muted" />
               </button>
               <span className="font-medium text-foreground">
                 {selectedPerson.name}
               </span>
-              <button onClick={handleClose}>
+              <button
+                onClick={handleClose}
+                aria-label="Close panel"
+              >
                 <X className="w-5 h-5 text-muted" />
               </button>
             </div>

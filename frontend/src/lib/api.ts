@@ -1,25 +1,53 @@
 import { TreeResponse, Person, ImmediateFamily, QueryResponse, ApiError } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
+// Helper to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 class ApiClient {
-  private async fetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  private async fetch<T>(
+    endpoint: string,
+    options?: RequestInit,
+    retries: number = MAX_RETRIES
+  ): Promise<T> {
     const url = `${API_BASE}${endpoint}`;
+    let lastError: Error | null = null;
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
-    });
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers,
+          },
+        });
 
-    if (!response.ok) {
-      const error: ApiError = await response.json();
-      throw new Error(error.error?.message || 'API request failed');
+        if (!response.ok) {
+          const error: ApiError = await response.json();
+          throw new Error(error.error?.message || 'API request failed');
+        }
+
+        return response.json();
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error('Unknown error');
+
+        // Don't retry on client errors (4xx) - only retry on network/server errors
+        if (lastError.message.includes('API request failed')) {
+          throw lastError;
+        }
+
+        // Wait before retrying (exponential backoff)
+        if (attempt < retries - 1) {
+          await delay(RETRY_DELAY_MS * Math.pow(2, attempt));
+        }
+      }
     }
 
-    return response.json();
+    throw lastError || new Error('Request failed after retries');
   }
 
   // Get tree data centered on a person

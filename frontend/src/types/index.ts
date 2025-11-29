@@ -51,22 +51,15 @@ export interface ApiError {
 }
 
 // React Flow node data
-export interface PersonNodeData extends Record<string, unknown> {
+export interface PersonNodeData {
   person: Person;
   isSelected: boolean;
 }
 
 // Couple node data
-export interface CoupleNodeData extends Record<string, unknown> {
+export interface CoupleNodeData {
   person1: Person;
   person2: Person;
   isSelected: boolean;
   selectedPersonId: string | null;
-}
-
-// Viewport state
-export interface Viewport {
-  x: number;
-  y: number;
-  zoom: number;
 }

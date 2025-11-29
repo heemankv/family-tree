@@ -1,33 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Search, Sparkles, Moon, Sun } from 'lucide-react';
+import { useEffect } from 'react';
+import { Search, Sparkles } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const { setQueryModalOpen, setSearchModalOpen } = useAppStore();
-  const [isDark, setIsDark] = useState(false);
 
-  // Initialize theme from localStorage or system preference
+  // Initialize theme from localStorage or system preference on mount
   useEffect(() => {
-    const stored = localStorage.getItem('theme');
-    if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
+    try {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    } catch {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+      }
     }
   }, []);
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-    if (isDark) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    }
-  };
 
   return (
     <header className="sticky top-0 z-50 h-14 bg-surface/95 backdrop-blur-sm border-b border-border shadow-sm pt-safe">
@@ -51,6 +44,7 @@ export function Header() {
               'transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
             )}
+            aria-label="Search people (⌘K)"
             title="Search (⌘K)"
           >
             <Search className="w-4 h-4" />
@@ -58,21 +52,6 @@ export function Header() {
             <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs bg-surface rounded border border-border text-muted">
               <span className="text-xs">⌘</span>K
             </kbd>
-          </button>
-
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className={cn(
-              'w-9 h-9 rounded-full flex items-center justify-center',
-              'bg-background hover:bg-border',
-              'text-muted',
-              'transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
-            )}
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
           {/* Siri-style Query Button */}
@@ -87,6 +66,7 @@ export function Header() {
               'transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2'
             )}
+            aria-label="Open Cypher Query"
             title="Open Cypher Query (Developer Tool)"
           >
             <Sparkles className="w-5 h-5 text-white" />

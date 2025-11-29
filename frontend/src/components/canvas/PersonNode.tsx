@@ -6,9 +6,8 @@ import { Star } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { LateBadge } from '@/components/ui/Badge';
 import { cn, getYearsDisplay, truncate } from '@/lib/utils';
+import { ME_PERSON_ID } from '@/lib/constants';
 import { Person } from '@/types';
-
-const ME_PERSON_ID = 'me-001';
 
 interface PersonNodeProps {
   data: {
@@ -27,10 +26,10 @@ function PersonNodeComponent({ data }: PersonNodeProps) {
         'bg-surface rounded-2xl shadow-lg border-2 p-3 relative',
         'w-[140px] cursor-pointer',
         'transition-all duration-200 ease-out',
-        'hover:shadow-xl hover:-translate-y-1 hover:bg-muted/50',
+        'hover:shadow-xl hover:-translate-y-1',
         isMe && 'border-amber-400 bg-amber-50/50 dark:bg-amber-900/20',
         isSelected
-          ? 'border-primary ring-2 ring-primary/30 ring-offset-2 shadow-primary/20 shadow-xl scale-105 bg-muted/50'
+          ? 'border-primary ring-2 ring-primary/30 ring-offset-2 shadow-primary/20 shadow-xl -translate-y-1'
           : !isMe && 'border-border hover:border-muted'
       )}
     >
@@ -76,4 +75,10 @@ function PersonNodeComponent({ data }: PersonNodeProps) {
   );
 }
 
-export const PersonNode = memo(PersonNodeComponent);
+export const PersonNode = memo(PersonNodeComponent, (prevProps, nextProps) => {
+  // Re-render when isSelected changes
+  return (
+    prevProps.data.isSelected === nextProps.data.isSelected &&
+    prevProps.data.person.id === nextProps.data.person.id
+  );
+});

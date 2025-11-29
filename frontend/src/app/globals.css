@@ -66,10 +66,14 @@ body {
   stroke-width: 3;
 }
 
-/* Highlighted edges (connected to selected person) */
+/* Highlighted edges (blood relation to selected person) */
 .react-flow__edge.highlighted-edge .react-flow__edge-path {
-  stroke: var(--primary);
+  stroke: #15803D;
   stroke-width: 3;
+}
+
+.dark .react-flow__edge.highlighted-edge .react-flow__edge-path {
+  stroke: #22C55E;
 }
 
 /* Spouse edges (pink) */

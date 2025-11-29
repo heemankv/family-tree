@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { User } from 'lucide-react';
 import { cn, getAvatarColor } from '@/lib/utils';
 import { Person } from '@/types';
@@ -11,20 +12,20 @@ interface AvatarProps {
 }
 
 const sizeClasses = {
-  sm: 'w-6 h-6',
-  md: 'w-9 h-9',
+  sm: 'w-8 h-8',
+  md: 'w-12 h-12',
   lg: 'w-16 h-16',
   xl: 'w-24 h-24',
 };
 
 const iconSizeClasses = {
-  sm: 'w-3 h-3',
-  md: 'w-5 h-5',
+  sm: 'w-4 h-4',
+  md: 'w-6 h-6',
   lg: 'w-8 h-8',
   xl: 'w-12 h-12',
 };
 
-export function Avatar({ person, size = 'md', className }: AvatarProps) {
+export const Avatar = memo(function Avatar({ person, size = 'md', className }: AvatarProps) {
   const colorClass = getAvatarColor(person.gender);
 
   if (person.photo_url) {
@@ -53,4 +54,4 @@ export function Avatar({ person, size = 'md', className }: AvatarProps) {
       <User className={cn(iconSizeClasses[size], 'opacity-70')} />
     </div>
   );
-}
+});

@@ -6,9 +6,8 @@ import { Star } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { LateBadge } from '@/components/ui/Badge';
 import { cn, getYearsDisplay, truncate } from '@/lib/utils';
+import { ME_PERSON_ID } from '@/lib/constants';
 import { Person } from '@/types';
-
-const ME_PERSON_ID = 'me-001';
 
 interface CoupleNodeProps {
   data: {
@@ -34,7 +33,7 @@ function CoupleNodeComponent({ data }: CoupleNodeProps) {
         'transition-all duration-200 ease-out',
         'hover:shadow-xl hover:-translate-y-1',
         isSelected
-          ? 'border-primary ring-2 ring-primary/30 ring-offset-2 shadow-primary/20 shadow-xl'
+          ? 'border-primary ring-2 ring-primary/30 ring-offset-2 shadow-primary/20 shadow-xl -translate-y-1'
           : 'border-border hover:border-muted'
       )}
     >
@@ -110,4 +109,12 @@ function CoupleNodeComponent({ data }: CoupleNodeProps) {
   );
 }
 
-export const CoupleNode = memo(CoupleNodeComponent);
+export const CoupleNode = memo(CoupleNodeComponent, (prevProps, nextProps) => {
+  // Re-render when selection changes
+  return (
+    prevProps.data.isSelected === nextProps.data.isSelected &&
+    prevProps.data.selectedPersonId === nextProps.data.selectedPersonId &&
+    prevProps.data.person1.id === nextProps.data.person1.id &&
+    prevProps.data.person2.id === nextProps.data.person2.id
+  );
+});

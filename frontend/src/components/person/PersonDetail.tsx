@@ -26,15 +26,19 @@ interface PersonDetailProps {
 export function PersonDetail({ person, onClose, onPersonClick }: PersonDetailProps) {
   const [family, setFamily] = useState<ImmediateFamily | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadFamily() {
       setLoading(true);
+      setError(null);
       try {
         const data = await api.getPersonFamily(person.id);
         setFamily(data);
-      } catch (error) {
-        console.error('Failed to load family:', error);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to load family data';
+        setError(message);
+        console.error('Failed to load family:', err);
       } finally {
         setLoading(false);
       }
@@ -110,6 +114,23 @@ export function PersonDetail({ person, onClose, onPersonClick }: PersonDetailPro
         {loading ? (
           <div className="flex justify-center py-8">
             <LoadingSpinner size="sm" />
+          </div>
+        ) : error ? (
+          <div className="py-4 text-center">
+            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            <button
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                api.getPersonFamily(person.id)
+                  .then(setFamily)
+                  .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load'))
+                  .finally(() => setLoading(false));
+              }}
+              className="mt-2 text-sm text-primary hover:underline"
+            >
+              Try again
+            </button>
           </div>
         ) : family ? (
           <div className="space-y-3">
