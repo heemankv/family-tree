@@ -1,0 +1,281 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light theme - subtle grays */
+  --background: #F5F5F5;
+  --surface: #FFFFFF;
+  --foreground: #171717;
+  --primary: #3B82F6;
+  --accent: #8B5CF6;
+  --muted: #6B7280;
+  --border: #E5E7EB;
+  --card-bg: #FFFFFF;
+  --card-border: #E5E7EB;
+  --dot-color: #D1D5DB;
+  --edge-color: #9CA3AF;
+  --edge-hover: #6B7280;
+}
+
+.dark {
+  /* Dark theme - subtle dark grays, not pure black */
+  --background: #1A1A1A;
+  --surface: #242424;
+  --foreground: #E5E5E5;
+  --primary: #60A5FA;
+  --accent: #A78BFA;
+  --muted: #9CA3AF;
+  --border: #3A3A3A;
+  --card-bg: #2A2A2A;
+  --card-border: #3A3A3A;
+  --dot-color: #404040;
+  --edge-color: #525252;
+  --edge-hover: #737373;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Smooth page transitions */
+* {
+  scroll-behavior: smooth;
+}
+
+/* React Flow customizations */
+.react-flow__node {
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.react-flow__node:hover {
+  z-index: 10 !important;
+}
+
+.react-flow__edge-path {
+  stroke: var(--edge-color);
+  stroke-width: 2;
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: var(--edge-hover);
+  stroke-width: 3;
+}
+
+/* Highlighted edges (connected to selected person) */
+.react-flow__edge.highlighted-edge .react-flow__edge-path {
+  stroke: var(--primary);
+  stroke-width: 3;
+}
+
+/* Spouse edges (pink) */
+.react-flow__edge.spouse-edge .react-flow__edge-path {
+  stroke: #EC4899;
+  stroke-dasharray: 5, 5;
+}
+
+/* Sibling edges (blue) */
+.react-flow__edge.sibling-edge .react-flow__edge-path {
+  stroke: #3B82F6;
+  stroke-dasharray: 3, 3;
+}
+
+.react-flow__controls {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  border: none;
+  background: var(--surface);
+  color: var(--foreground);
+  transition: background-color 0.15s ease;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--background);
+}
+
+.dark .react-flow__controls-button svg {
+  fill: var(--foreground);
+}
+
+/* Pane grab cursor */
+.react-flow__pane {
+  cursor: grab;
+}
+
+.react-flow__pane:active {
+  cursor: grabbing;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Glass morphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass {
+  background: rgba(36, 36, 36, 0.85);
+}
+
+/* Code block styling for query modal */
+.code-block {
+  background: #1E1E1E;
+  color: #D4D4D4;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-subtle {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Focus ring for accessibility */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+}
+
+/* Button press effect */
+.btn-press {
+  @apply active:scale-95 transition-transform duration-100;
+}
+
+/* Safe area padding for mobile devices with notches */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Mobile touch optimizations */
+@media (max-width: 767px) {
+
+  /* Larger touch targets on mobile */
+  .react-flow__node {
+    touch-action: manipulation;
+  }
+
+  /* Disable text selection during pan */
+  .react-flow__pane {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Tablet specific adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .react-flow__controls {
+    bottom: 20px;
+    left: 20px;
+  }
+}
