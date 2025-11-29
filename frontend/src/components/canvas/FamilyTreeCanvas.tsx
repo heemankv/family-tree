@@ -79,21 +79,125 @@ function FamilyTreeCanvasInner() {
   }, [zoomIn, zoomOut, fitView]);
 
   // Calculate layout - use fixed center node to prevent layout shifts
-  // Only storeNodes, links changes should trigger re-layout
-  // selectedPersonId only affects highlighting, not positions
+  // Only storeNodes, links changes should trigger full re-layout
   const { nodes: layoutNodes, edges: layoutEdges } = useMemo(() => {
-    return layoutFamilyTree(storeNodes, links, LAYOUT_CENTER_NODE, selectedPersonId);
-  }, [storeNodes, links, selectedPersonId]);
+    return layoutFamilyTree(storeNodes, links, LAYOUT_CENTER_NODE, null);
+  }, [storeNodes, links]);
 
   // React Flow state
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges);
 
-  // Update nodes when layout changes
+  // Update nodes when layout changes (only on data load, not selection)
   useEffect(() => {
     setNodes(layoutNodes);
     setEdges(layoutEdges);
   }, [layoutNodes, layoutEdges, setNodes, setEdges]);
+
+  // Build parent/child/spouse relationships for edge highlighting
+  const { parentIds, childIds } = useMemo(() => {
+    if (!selectedPersonId || !links) {
+      return { parentIds: new Set<string>(), childIds: new Set<string>() };
+    }
+
+    const parentIds = new Set<string>();
+    const childIds = new Set<string>();
+    let spouseId: string | null = null;
+
+    for (const link of links) {
+      if (link.relationship === 'PARENT_CHILD') {
+        if (link.target === selectedPersonId) {
+          parentIds.add(link.source);
+        }
+        if (link.source === selectedPersonId) {
+          childIds.add(link.target);
+        }
+      }
+      if (link.relationship === 'SPOUSE') {
+        if (link.source === selectedPersonId) spouseId = link.target;
+        if (link.target === selectedPersonId) spouseId = link.source;
+      }
+    }
+
+    // Also include spouse's children
+    if (spouseId) {
+      for (const link of links) {
+        if (link.relationship === 'PARENT_CHILD' && link.source === spouseId) {
+          childIds.add(link.target);
+        }
+      }
+    }
+
+    return { parentIds, childIds };
+  }, [selectedPersonId, links]);
+
+  // Update only selection state without recreating nodes
+  useEffect(() => {
+    setNodes((currentNodes) =>
+      currentNodes.map((node) => {
+        if (node.type === 'coupleNode') {
+          const data = node.data as { person1: { id: string }; person2: { id: string } };
+          const isSelected = selectedPersonId === data.person1.id || selectedPersonId === data.person2.id;
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isSelected,
+              selectedPersonId,
+            },
+          };
+        } else {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isSelected: node.id === selectedPersonId,
+            },
+          };
+        }
+      })
+    );
+  }, [selectedPersonId, setNodes]);
+
+  // Update edge highlighting separately
+  useEffect(() => {
+    setEdges((currentEdges) =>
+      currentEdges.map((edge) => {
+        let isHighlighted = false;
+
+        if (selectedPersonId) {
+          // Only highlight blood relations:
+          // 1. Edge where target is the selected person (edge from parent to selected)
+          const edgeToSelected = edge.target === selectedPersonId || edge.target.includes(selectedPersonId);
+          // 2. Edge where target is a child of selected person
+          const edgeToChild = Array.from(childIds).some(
+            (cid) => edge.target === cid || edge.target.includes(cid)
+          );
+
+          // For edges TO the selected person, only highlight if source is their parent
+          if (edgeToSelected) {
+            const sourceIsParent = Array.from(parentIds).some(
+              (pid) => edge.source === pid || edge.source.includes(pid)
+            );
+            isHighlighted = sourceIsParent;
+          } else if (edgeToChild) {
+            // For edges to children, only highlight if source contains the selected person
+            const sourceHasSelected = edge.source === selectedPersonId || edge.source.includes(selectedPersonId);
+            isHighlighted = sourceHasSelected;
+          }
+        }
+
+        return {
+          ...edge,
+          className: isHighlighted ? 'highlighted-edge' : '',
+          style: {
+            ...edge.style,
+            strokeWidth: isHighlighted ? 3 : 2,
+          },
+        };
+      })
+    );
+  }, [selectedPersonId, parentIds, childIds, setEdges]);
 
   // Fit view when data loads
   useEffect(() => {
