@@ -64,7 +64,10 @@ export const useAppStore = create<AppState>((set) => ({
   // Graph data
   nodes: [],
   links: [],
-  setGraphData: (nodes, links) => set({ nodes, links }),
+  setGraphData: (nodes, links) => set({
+    nodes: nodes || [],
+    links: links || []
+  }),
 
   // Query modal
   queryModalOpen: false,

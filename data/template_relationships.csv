@@ -1,0 +1,8 @@
+type,person1_id,person2_id,start_date
+SPOUSE,person-001,person-002,1975-06-15
+SPOUSE,person-003,person-004,1945-04-20
+PARENT_CHILD,person-003,person-001,
+PARENT_CHILD,person-004,person-001,
+PARENT_CHILD,person-001,person-005,
+PARENT_CHILD,person-002,person-005,
+SIBLING,person-001,person-006,

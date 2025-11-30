@@ -1,0 +1,6 @@
+id,name,aka,gender,is_alive,birth_date,death_date,current_location,profession,photo_url
+person-001,John Doe,"Johnny, JD",Male,TRUE,1950-05-15,,New York USA,Engineer,
+person-002,Jane Doe,,Female,TRUE,1952-08-22,,New York USA,Teacher,
+person-003,Robert Doe,,Male,FALSE,1920-01-10,1995-06-20,Boston USA,Farmer,
+person-004,Mary Doe,Grandma,Female,FALSE,1922-03-18,2000-12-05,Boston USA,Homemaker,
+person-005,Child Doe,,Male,TRUE,1980-11-30,,Los Angeles USA,Developer,
