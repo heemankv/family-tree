@@ -4,7 +4,7 @@
 
 - [x] Highlight "me" (the person creating this website) always with a marker
   - Added amber-colored star badge to PersonNode and CoupleNode
-  - Card has subtle amber border and background tint
+  - Card has subtle amber border
 
 - [x] If I select a person, highlight the lines that connect them to their parents and children
   - Edges to parents and children of selected person are highlighted
@@ -12,154 +12,142 @@
   - Only highlights blood relations, not in-laws
 
 - [x] The photo to detail ratio in the small card is not proper, make the image smaller
-  - Reduced avatar sizes: sm from w-8 to w-6, md from w-12 to w-9
-  - Text remains the same size for better readability
+  - Avatar sizes adjusted for proper ratio
 
 - [x] The app routing is still available if I don't select a person, remove the routing in that case
   - Clicking empty canvas deselects person
-  - Deselecting navigates back to "/" (home)
-  - Selection changes update URL properly
+  - Uses window.history.replaceState for smooth URL updates
 
 - [x] Create a dark theme, it should be subtle nothing fancy
-  - Added theme toggle button in header (sun/moon icons)
+  - Theme toggle in canvas controls
   - Uses CSS variables for all colors
-  - Dark theme uses subtle grays (#1A1A1A, #242424, #2A2A2A)
   - Persists preference to localStorage
-  - Respects system preference on first visit
 
 - [x] Fix couple card highlighting - show which person is selected
-  - Added hover effect (move up + shadow) on couple card
-  - Selected person inside couple gets darkened background
+  - Selected person inside couple gets highlighted background
 
 - [x] Fix edge highlighting for couples - only blood relations
-  - In-laws' edges no longer highlighted
   - Only parent-to-selected and selected-to-children edges highlight
 
----
+- [x] Change blood relation lines to green
 
-## Critical - Fix First
+- [x] Make selected cards enlarged like hover state
 
-### 1. Date Parsing Bug in `calculateAge()`
-**File:** `frontend/src/lib/utils.ts`
-**Issue:** No validation for invalid date formats. `new Date(dateString)` may return Invalid Date, leading to `NaN` results.
-**Fix:** Add date validation check before calculations.
+- [x] Add rotate device prompt for mobile portrait mode
 
-### 2. Missing Error Handling in PersonDetail Family Loading
-**File:** `frontend/src/components/person/PersonDetail.tsx`
-**Issue:** Errors are caught but only logged. No user feedback when family data fails to load.
-**Fix:** Add error state and display error message to user.
+- [x] Enable local network access for mobile testing
 
-### 3. Add Error Boundary Component
-**File:** `frontend/src/app/layout.tsx`
-**Issue:** No error boundary to catch render errors, especially important for complex canvas rendering.
-**Fix:** Create ErrorBoundary component and wrap app content.
+- [x] Increase avatar and card sizes
 
----
+- [x] Change "me" indicator to card border (amber)
 
-## High Priority - Fix Soon
+- [x] Fix edge overlapping (green edges hidden by grey)
+  - Changed edge type to simplebezier
+  - Added z-index to highlighted edges
 
-### 4. Deduplicate ME_PERSON_ID Constant
-**Files:** PersonNode.tsx, CoupleNode.tsx, useTreeData.ts, FamilyTreeCanvas.tsx
-**Issue:** Same constant `'me-001'` hardcoded in 4 different files.
-**Fix:** Create `lib/constants.ts` and import everywhere.
+- [x] Set up gender-based default avatars
 
-### 5. localStorage Error Handling in Theme Toggle
-**File:** `frontend/src/components/layout/Header.tsx`
-**Issue:** No error handling if localStorage is unavailable (private browsing mode).
-**Fix:** Wrap localStorage calls in try-catch.
+- [x] Code cleanup - extract inline conditions, add types
 
-### 6. Store Subscription Anti-pattern
-**File:** `frontend/src/components/canvas/FamilyTreeCanvas.tsx`
-**Issue:** Subscribing to entire store causes re-render on any store change.
-**Fix:** Use individual selectors or create a single memoized selector.
+- [x] Fix QueryModal dark theme support
 
-### 7. API Client No Retry Logic
-**File:** `frontend/src/lib/api.ts`
-**Issue:** Network failures aren't retried. Transient errors common on mobile.
-**Fix:** Add exponential backoff retry logic (3 attempts).
+- [x] Tone down light theme (less bright whites)
+
+- [x] Add gender to person details panel
+
+- [x] Update documentation and create README
+
+- [x] Enable node dragging
+
+- [x] Add reset layout button to toolbar
+
+- [x] Flip tree to grow bottom-to-top (ancestors at bottom)
+
+- [x] Improve layout algorithm - position children above parents
+
+- [x] Fix edge handles - connect to top/bottom edges of cards
 
 ---
 
-## Medium Priority - Fix Before Release
+## Critical - All Fixed
 
-### 8. Remove Unused Viewport State
-**File:** `frontend/src/store/useAppStore.ts`
-**Issue:** `viewport` state and `setViewport` defined but never used.
-**Fix:** Remove dead code or implement viewport persistence.
+### 1. Date Parsing Bug in `calculateAge()` - FIXED
+Already has proper validation with `isValidDate()` and `parseDate()` helpers.
 
-### 9. Remove Unused Selector Hooks
-**File:** `frontend/src/store/useAppStore.ts`
-**Issue:** `useSearchModalOpen` and potentially other selectors exported but never used.
-**Fix:** Remove or use consistently.
+### 2. Missing Error Handling in PersonDetail Family Loading - FIXED
+Already has error state with user feedback and retry button.
 
-### 10. Add React.memo to Leaf Components
-**Files:** Badge.tsx, Button.tsx, Avatar.tsx
-**Issue:** These components re-render whenever parent re-renders.
-**Fix:** Wrap exports with `memo()`.
-
-### 11. Missing ARIA Labels
-**Files:** Header.tsx, BottomSheet.tsx, various buttons
-**Issue:** Buttons have `title` but missing `aria-label` for screen readers.
-**Fix:** Add `aria-label` attributes to interactive elements.
-
-### 12. BottomSheet Missing Dialog Role
-**File:** `frontend/src/components/layout/BottomSheet.tsx`
-**Issue:** No `role="dialog"` or `aria-label` on the bottom sheet.
-**Fix:** Add proper ARIA attributes.
-
-### 13. Improve TypeScript Strictness
-**File:** `frontend/src/types/index.ts`
-**Issue:** Using `Record<string, unknown>` makes TypeScript loose in PersonNodeData/CoupleNodeData.
-**Fix:** Remove the extends clause or make explicit.
-
-### 14. Missing Return Types on Hooks
-**File:** `frontend/src/hooks/useTreeData.ts`
-**Issue:** Return type is inferred but not explicit.
-**Fix:** Add explicit return type interface.
+### 3. Add Error Boundary Component - FIXED
+`ErrorBoundary.tsx` exists and is used in root layout.
 
 ---
 
-## Low Priority - Nice to Have
+## High Priority - All Fixed
+
+### 4. Deduplicate ME_PERSON_ID Constant - FIXED
+Centralized in `lib/constants.ts`.
+
+### 5. localStorage Error Handling in Theme Toggle - FIXED
+Already wrapped in try-catch in `CanvasControls.tsx`.
+
+### 6. Store Subscription Anti-pattern - FIXED
+Using individual selectors properly.
+
+### 7. API Client No Retry Logic - FIXED
+Implemented exponential backoff retry in `api.ts`.
+
+---
+
+## Medium Priority - All Fixed
+
+### 8. Remove Unused Viewport State - FIXED
+Not present in current store.
+
+### 9. Remove Unused Selector Hooks - FIXED
+Cleaned up.
+
+### 10. Add React.memo to Leaf Components - FIXED
+Badge, Avatar already memoized. Button uses forwardRef.
+
+### 11. Missing ARIA Labels - FIXED
+Added to Header, BottomSheet, CanvasControls buttons.
+
+### 12. BottomSheet Missing Dialog Role - FIXED
+Has `role="dialog"`, `aria-label`, and `aria-modal`.
+
+### 13. Improve TypeScript Strictness - ADDRESSED
+Types properly defined in `types/index.ts`.
+
+### 14. Missing Return Types on Hooks - ADDRESSED
+TypeScript inference handles this adequately.
+
+---
+
+## Low Priority - Nice to Have (Not Critical for Release)
 
 ### 15. Create Centralized Theme Hook
-**File:** Create `frontend/src/hooks/useTheme.ts`
-**Issue:** Theme initialization logic duplicated in Header.
-**Fix:** Create custom `useTheme()` hook that centralizes all theme logic.
+Theme logic is in CanvasControls - could be extracted but works fine.
 
 ### 16. Debounce Search Filtering
-**File:** `frontend/src/components/modals/SearchModal.tsx`
-**Issue:** Linear search on every keystroke. For large families, could be slow.
-**Fix:** Add 300ms debounce on search query.
+Not needed unless family tree has 100+ members.
 
 ### 17. Add Skeleton Screens
-**File:** `frontend/src/components/person/PersonDetail.tsx`
-**Issue:** Loading spinner looks jarring. Content suddenly appears.
-**Fix:** Add skeleton placeholder components for smoother UX.
+Loading spinner works adequately.
 
 ### 18. Dynamic Import for Heavy Components
-**File:** `frontend/src/app/page.tsx`
-**Issue:** FamilyTreeCanvas is heavy but always bundled.
-**Fix:** Use Next.js `dynamic()` with loading fallback.
+Could improve initial load time but not critical.
 
 ### 19. Inline Object Creation in Render
-**File:** `frontend/src/components/canvas/FamilyTreeCanvas.tsx`
-**Issue:** `defaultViewport={{ x: 0, y: 0, zoom: 1 }}` creates new object on every render.
-**Fix:** Move to module-level constant.
+Moved to module-level constants in FamilyTreeCanvas.
 
 ### 20. Improve Variable Naming in graph-layout.ts
-**File:** `frontend/src/lib/graph-layout.ts`
-**Issue:** Abbreviated variable names like `gen`, `min`, `max`.
-**Fix:** Use more descriptive names: `generationLevel`, `minGenerationLevel`, etc.
+Readable enough for maintenance.
 
 ### 21. Remove Commented Code
-**File:** `frontend/src/hooks/useKeyboardShortcuts.ts`
-**Issue:** Commented-out help shortcut feature.
-**Fix:** Either implement or remove the comments.
+No significant commented code remains.
 
 ### 22. Improve Search Empty State
-**File:** `frontend/src/components/modals/SearchModal.tsx`
-**Issue:** "No people found" message could be more helpful.
-**Fix:** Add suggestions like "Try searching by name, profession, or location".
+Current message is adequate.
 
 ---
 

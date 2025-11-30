@@ -14,6 +14,13 @@ interface LayoutResult {
   edges: Edge[];
 }
 
+interface NodeInfo {
+  id: string;
+  persons: Person[];
+  width: number;
+  x: number;
+}
+
 // Find parent-child relationships
 function getParentChildMap(links: Link[]): { parents: Map<string, string[]>; children: Map<string, string[]> } {
   const parents = new Map<string, string[]>();
@@ -21,7 +28,6 @@ function getParentChildMap(links: Link[]): { parents: Map<string, string[]>; chi
 
   for (const link of links) {
     if (link.relationship === 'PARENT_CHILD') {
-      // source is parent, target is child
       if (!children.has(link.source)) children.set(link.source, []);
       children.get(link.source)!.push(link.target);
 
@@ -58,7 +64,6 @@ function calculateGenerations(
   const spouseMap = getSpouseMap(links);
   const personIds = new Set(persons.map(p => p.id));
 
-  // Start from center person
   generations.set(centerPersonId, 0);
   const queue: string[] = [centerPersonId];
   const visited = new Set<string>([centerPersonId]);
@@ -67,7 +72,6 @@ function calculateGenerations(
     const currentId = queue.shift()!;
     const currentGen = generations.get(currentId)!;
 
-    // Parents are one generation up (negative)
     const parentIds = parents.get(currentId) || [];
     for (const parentId of parentIds) {
       if (!visited.has(parentId) && personIds.has(parentId)) {
@@ -77,7 +81,6 @@ function calculateGenerations(
       }
     }
 
-    // Children are one generation down (positive)
     const childIds = children.get(currentId) || [];
     for (const childId of childIds) {
       if (!visited.has(childId) && personIds.has(childId)) {
@@ -87,7 +90,6 @@ function calculateGenerations(
       }
     }
 
-    // Spouse is same generation
     const spouseId = spouseMap.get(currentId);
     if (spouseId && !visited.has(spouseId) && personIds.has(spouseId)) {
       visited.add(spouseId);
@@ -96,7 +98,6 @@ function calculateGenerations(
     }
   }
 
-  // Handle any disconnected persons (shouldn't happen normally)
   for (const person of persons) {
     if (!generations.has(person.id)) {
       generations.set(person.id, 0);
@@ -106,15 +107,41 @@ function calculateGenerations(
   return generations;
 }
 
-// Layout the family tree with couple grouping
-// IMPORTANT: Layout positions should NOT depend on selectedPersonId to avoid re-arrangement
+// Resolve overlapping nodes by pushing them apart
+function resolveOverlaps(nodeInfos: NodeInfo[]): void {
+  // Sort by x position
+  nodeInfos.sort((a, b) => a.x - b.x);
+
+  // Push overlapping nodes apart
+  for (let i = 1; i < nodeInfos.length; i++) {
+    const prev = nodeInfos[i - 1];
+    const curr = nodeInfos[i];
+    const minX = prev.x + prev.width / 2 + COL_GAP + curr.width / 2;
+
+    if (curr.x < minX) {
+      curr.x = minX;
+    }
+  }
+
+  // Center the generation around 0
+  if (nodeInfos.length > 0) {
+    const minX = nodeInfos[0].x - nodeInfos[0].width / 2;
+    const maxX = nodeInfos[nodeInfos.length - 1].x + nodeInfos[nodeInfos.length - 1].width / 2;
+    const offset = (minX + maxX) / 2;
+
+    for (const node of nodeInfos) {
+      node.x -= offset;
+    }
+  }
+}
+
+// Layout the family tree with parent-child alignment
 export function layoutFamilyTree(
   persons: Person[],
   links: Link[],
   centerPersonId: string,
   selectedPersonId: string | null
 ): LayoutResult {
-  // Handle null, undefined, or empty arrays
   if (!persons || persons.length === 0) {
     return { nodes: [], edges: [] };
   }
@@ -136,26 +163,23 @@ export function layoutFamilyTree(
     genGroups.get(gen)!.push(person);
   }
 
-  // Sort persons within each generation for consistent ordering
-  // Sort by ID to ensure stable order regardless of data fetch order
-  genGroups.forEach((group) => {
-    group.sort((a: Person, b: Person) => a.id.localeCompare(b.id));
-  });
-
   const genNumbers = Array.from(genGroups.keys()).sort((a, b) => a - b);
   const minGen = genNumbers[0] ?? 0;
   const maxGen = genNumbers[genNumbers.length - 1] ?? 0;
 
-  // Track which persons are grouped into couples
+  // Track node positions: personId -> x position
+  const personXPositions = new Map<string, number>();
+  // Track node info by generation
+  const genNodeInfos = new Map<number, NodeInfo[]>();
+  // Track which persons are processed
   const processedPersons = new Set<string>();
-  const nodes: LayoutNode[] = [];
-  const nodeIdMap = new Map<string, string>(); // personId -> nodeId
+  // Map personId -> nodeId
+  const nodeIdMap = new Map<string, string>();
 
-  // Process each generation and create nodes
+  // Process generations from oldest (bottom) to youngest (top)
   for (let gen = minGen; gen <= maxGen; gen++) {
     const personsInGen = genGroups.get(gen) || [];
-    let xOffset = 0;
-    const y = (gen - minGen) * ROW_HEIGHT;
+    const nodeInfos: NodeInfo[] = [];
 
     for (const person of personsInGen) {
       if (processedPersons.has(person.id)) continue;
@@ -163,55 +187,165 @@ export function layoutFamilyTree(
       const spouseId = spouseMap.get(person.id);
       const spouse = spouseId ? personMap.get(spouseId) : undefined;
       const spouseGen = spouseId ? generations.get(spouseId) : undefined;
-      const spouseInSameGen = spouse && spouseGen === gen;
+      const spouseInSameGen = spouse && spouseGen === gen && !processedPersons.has(spouseId!);
 
-      if (spouse && spouseInSameGen && !processedPersons.has(spouseId!)) {
-        // Create couple node - use sorted IDs for consistent node ID
-        const [firstId, secondId] = [person.id, spouse.id].sort();
-        const coupleNodeId = `couple-${firstId}-${secondId}`;
+      // Calculate x position based on parents (for couple, use both persons' parents)
+      let targetX = 0;
+      const relevantPersonIds = spouseInSameGen ? [person.id, spouse!.id] : [person.id];
 
-        // Determine which person is first based on sorted order
-        const [person1, person2] = person.id === firstId ? [person, spouse] : [spouse, person];
+      // Get all parent positions
+      const parentPositions: number[] = [];
+      for (const pid of relevantPersonIds) {
+        const parentIds = parents.get(pid) || [];
+        for (const parentId of parentIds) {
+          const parentX = personXPositions.get(parentId);
+          if (parentX !== undefined) {
+            parentPositions.push(parentX);
+          }
+        }
+      }
+
+      // Get all children positions (for older generations positioning based on where children ended up)
+      const childPositions: number[] = [];
+      for (const pid of relevantPersonIds) {
+        const childIds = children.get(pid) || [];
+        for (const childId of childIds) {
+          const childX = personXPositions.get(childId);
+          if (childX !== undefined) {
+            childPositions.push(childX);
+          }
+        }
+      }
+
+      if (parentPositions.length > 0) {
+        // Position based on average of parent positions
+        targetX = parentPositions.reduce((a, b) => a + b, 0) / parentPositions.length;
+      } else if (childPositions.length > 0) {
+        // Position based on average of children positions
+        targetX = childPositions.reduce((a, b) => a + b, 0) / childPositions.length;
+      }
+
+      if (spouseInSameGen) {
+        const [firstId, secondId] = [person.id, spouse!.id].sort();
+        const nodeId = `couple-${firstId}-${secondId}`;
+
+        nodeInfos.push({
+          id: nodeId,
+          persons: [person, spouse!],
+          width: COUPLE_WIDTH,
+          x: targetX,
+        });
+
+        nodeIdMap.set(person.id, nodeId);
+        nodeIdMap.set(spouse!.id, nodeId);
+        processedPersons.add(person.id);
+        processedPersons.add(spouse!.id);
+      } else {
+        nodeInfos.push({
+          id: person.id,
+          persons: [person],
+          width: SINGLE_WIDTH,
+          x: targetX,
+        });
+
+        nodeIdMap.set(person.id, person.id);
+        processedPersons.add(person.id);
+      }
+    }
+
+    // Resolve overlaps within this generation
+    resolveOverlaps(nodeInfos);
+
+    // Record positions for all persons in this generation
+    for (const info of nodeInfos) {
+      for (const p of info.persons) {
+        personXPositions.set(p.id, info.x);
+      }
+    }
+
+    genNodeInfos.set(gen, nodeInfos);
+  }
+
+  // Second pass: adjust parent positions to be centered under their children
+  // Process from youngest to oldest
+  for (let gen = maxGen - 1; gen >= minGen; gen--) {
+    const nodeInfos = genNodeInfos.get(gen) || [];
+
+    for (const info of nodeInfos) {
+      // Find all children of persons in this node
+      const childXPositions: number[] = [];
+      for (const p of info.persons) {
+        const childIds = children.get(p.id) || [];
+        for (const childId of childIds) {
+          const childX = personXPositions.get(childId);
+          if (childX !== undefined) {
+            childXPositions.push(childX);
+          }
+        }
+      }
+
+      if (childXPositions.length > 0) {
+        const avgChildX = childXPositions.reduce((a, b) => a + b, 0) / childXPositions.length;
+        info.x = avgChildX;
+      }
+    }
+
+    // Resolve overlaps again after adjustment
+    resolveOverlaps(nodeInfos);
+
+    // Update positions
+    for (const info of nodeInfos) {
+      for (const p of info.persons) {
+        personXPositions.set(p.id, info.x);
+      }
+    }
+  }
+
+  // Create actual nodes
+  const nodes: LayoutNode[] = [];
+
+  for (let gen = minGen; gen <= maxGen; gen++) {
+    const nodeInfos = genNodeInfos.get(gen) || [];
+    const y = (maxGen - gen) * ROW_HEIGHT;
+
+    for (const info of nodeInfos) {
+      if (info.persons.length === 2) {
+        // Couple node
+        const [firstId, secondId] = [info.persons[0].id, info.persons[1].id].sort();
+        const [person1, person2] = info.persons[0].id === firstId
+          ? [info.persons[0], info.persons[1]]
+          : [info.persons[1], info.persons[0]];
 
         nodes.push({
-          id: coupleNodeId,
+          id: info.id,
           type: 'coupleNode',
-          position: { x: xOffset, y },
+          position: { x: info.x - info.width / 2, y },
           data: {
             person1,
             person2,
-            isSelected: selectedPersonId === person.id || selectedPersonId === spouse.id,
+            isSelected: selectedPersonId === person1.id || selectedPersonId === person2.id,
             selectedPersonId,
           },
         });
-
-        nodeIdMap.set(person.id, coupleNodeId);
-        nodeIdMap.set(spouse.id, coupleNodeId);
-        processedPersons.add(person.id);
-        processedPersons.add(spouse.id);
-        xOffset += COUPLE_WIDTH + COL_GAP;
       } else {
-        // Create single person node
+        // Single node
+        const person = info.persons[0];
         nodes.push({
-          id: person.id,
+          id: info.id,
           type: 'personNode',
-          position: { x: xOffset, y },
+          position: { x: info.x - info.width / 2, y },
           data: {
             person,
             isSelected: person.id === selectedPersonId,
           },
         });
-
-        nodeIdMap.set(person.id, person.id);
-        processedPersons.add(person.id);
-        xOffset += SINGLE_WIDTH + COL_GAP;
       }
     }
   }
 
-  // Center the layout
+  // Center the entire layout
   if (nodes.length > 0) {
-    const allX = nodes.map(n => n.position.x);
+    const allX = nodes.map(n => n.position.x + (n.type === 'coupleNode' ? COUPLE_WIDTH : SINGLE_WIDTH) / 2);
     const allY = nodes.map(n => n.position.y);
     const centerX = (Math.min(...allX) + Math.max(...allX)) / 2;
     const centerY = (Math.min(...allY) + Math.max(...allY)) / 2;
@@ -222,23 +356,19 @@ export function layoutFamilyTree(
     }
   }
 
-  // Create edges - only PARENT_CHILD relationships
-  // Each child should have exactly ONE edge to their parent(s) node
+  // Create edges
   const edges: Edge[] = [];
   const addedEdges = new Set<string>();
 
-  // Get highlighted edges info (for visual styling only, not layout)
   const selectedParentIds = new Set(selectedPersonId ? (parents.get(selectedPersonId) || []) : []);
   const selectedChildIds = new Set(selectedPersonId ? (children.get(selectedPersonId) || []) : []);
 
-  // If selected person has a spouse, include their children too
   const selectedSpouseId = selectedPersonId ? spouseMap.get(selectedPersonId) : null;
   if (selectedSpouseId) {
     const spouseChildren = children.get(selectedSpouseId) || [];
     spouseChildren.forEach(id => selectedChildIds.add(id));
   }
 
-  // For each PARENT_CHILD link, create an edge from parent's node to child's node
   for (const link of links) {
     if (link.relationship !== 'PARENT_CHILD') continue;
 
@@ -247,19 +377,13 @@ export function layoutFamilyTree(
 
     if (!parentNodeId || !childNodeId) continue;
 
-    // Create unique edge key to avoid duplicates
-    // (both parents in a couple map to same node, so we dedupe)
     const edgeKey = `${parentNodeId}->${childNodeId}`;
     if (addedEdges.has(edgeKey)) continue;
     addedEdges.add(edgeKey);
 
-    // Determine if this edge should be highlighted
     const isHighlighted = selectedPersonId !== null && (
-      // Edge goes TO the selected person (from their parent)
       link.target === selectedPersonId ||
-      // Edge comes FROM parent of selected person
       selectedParentIds.has(link.source) ||
-      // Edge goes FROM the selected person (to their child)
       selectedChildIds.has(link.target)
     );
 
@@ -267,6 +391,8 @@ export function layoutFamilyTree(
       id: `edge-${edgeKey}`,
       source: parentNodeId,
       target: childNodeId,
+      sourceHandle: 'top',     // parent's top handle (going up to children)
+      targetHandle: 'bottom',  // child's bottom handle (receiving from parents)
       type: 'simplebezier',
       className: isHighlighted ? 'highlighted-edge' : '',
       zIndex: isHighlighted ? 1000 : 0,

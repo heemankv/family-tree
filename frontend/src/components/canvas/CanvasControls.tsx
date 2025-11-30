@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useReactFlow } from '@xyflow/react';
-import { ZoomIn, ZoomOut, Maximize2, Sun, Moon } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Sun, Moon, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useAppStore } from '@/store/useAppStore';
 
 // Constants
 const ZOOM_DURATION = 200;
@@ -74,6 +75,7 @@ function useTheme() {
 export function CanvasControls() {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
   const { isDark, toggleTheme } = useTheme();
+  const resetLayout = useAppStore((state) => state.resetLayout);
 
   const handleZoomIn = useCallback(() => {
     zoomIn({ duration: ZOOM_DURATION });
@@ -86,6 +88,13 @@ export function CanvasControls() {
   const handleFitView = useCallback(() => {
     fitView({ duration: FIT_VIEW_DURATION, padding: FIT_VIEW_PADDING });
   }, [fitView]);
+
+  const handleResetLayout = useCallback(() => {
+    resetLayout();
+    setTimeout(() => {
+      fitView({ duration: FIT_VIEW_DURATION, padding: FIT_VIEW_PADDING });
+    }, 50);
+  }, [resetLayout, fitView]);
 
   return (
     <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2">
@@ -133,6 +142,17 @@ export function CanvasControls() {
         title="Fit to View"
       >
         <Maximize2 className={ICON_STYLES} />
+      </Button>
+
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleResetLayout}
+        className={BUTTON_STYLES}
+        aria-label="Reset layout"
+        title="Reset Layout"
+      >
+        <RotateCcw className={ICON_STYLES} />
       </Button>
     </div>
   );

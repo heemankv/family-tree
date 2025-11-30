@@ -194,15 +194,17 @@ function FamilyTreeCanvasInner() {
   const selectedPersonId = useAppStore((state) => state.selectedPersonId);
   const setSelectedPerson = useAppStore((state) => state.setSelectedPerson);
   const isLoading = useAppStore((state) => state.isLoading);
+  const layoutVersion = useAppStore((state) => state.layoutVersion);
 
   // Custom hooks
   useKeyboardZoomControls();
   useFitViewOnLoad(storeNodes.length);
 
-  // Calculate layout (only recalculates on data changes)
+  // Calculate layout (recalculates on data changes or layout reset)
   const { nodes: layoutNodes, edges: layoutEdges } = useMemo(
     () => layoutFamilyTree(storeNodes, links, ME_PERSON_ID, null),
-    [storeNodes, links]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [storeNodes, links, layoutVersion]
   );
 
   // React Flow state
@@ -312,7 +314,7 @@ function FamilyTreeCanvasInner() {
         panOnDrag
         zoomOnScroll
         zoomOnPinch
-        nodesDraggable={false}
+        nodesDraggable
         nodesConnectable={false}
         elementsSelectable
       >

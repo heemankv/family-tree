@@ -30,7 +30,7 @@ const PERSON_BASE_STYLES = [
 const PERSON_SELECTED_STYLES = 'bg-muted/70';
 
 const ME_BADGE_STYLES = 'absolute -top-1.5 -right-1.5 bg-amber-400 text-amber-900 p-1 rounded-full shadow-sm z-10';
-const HANDLE_STYLES = '!opacity-0 !w-0 !h-0';
+const HANDLE_STYLES = '!opacity-0 !w-3 !h-3 !min-w-0 !min-h-0';
 const DIVIDER_STYLES = 'w-px bg-border self-stretch my-2';
 
 const NAME_MAX_LENGTH = 14;
@@ -108,8 +108,8 @@ function CoupleNodeComponent({ data }: CoupleNodeProps) {
 
   return (
     <div className={cn(CARD_BASE_STYLES, cardBorderStyles)}>
-      <Handle type="target" position={Position.Top} className={HANDLE_STYLES} />
-      <Handle type="source" position={Position.Bottom} className={HANDLE_STYLES} />
+      <Handle type="source" position={Position.Top} id="top" className={HANDLE_STYLES} />
+      <Handle type="target" position={Position.Bottom} id="bottom" className={HANDLE_STYLES} />
 
       <PersonCard {...person1State} />
       <div className={DIVIDER_STYLES} />

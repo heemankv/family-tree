@@ -30,6 +30,10 @@ interface AppState {
   // Error state
   error: string | null;
   setError: (error: string | null) => void;
+
+  // Layout reset trigger
+  layoutVersion: number;
+  resetLayout: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -64,6 +68,10 @@ export const useAppStore = create<AppState>((set) => ({
   // Error
   error: null,
   setError: (error) => set({ error }),
+
+  // Layout reset
+  layoutVersion: 0,
+  resetLayout: () => set((state) => ({ layoutVersion: state.layoutVersion + 1 })),
 }));
 
 // Selector hooks for better performance

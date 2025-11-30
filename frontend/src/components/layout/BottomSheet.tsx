@@ -124,6 +124,7 @@ export function BottomSheet() {
             <button
               onClick={toggleState}
               className="w-full px-4 pb-3 flex items-center gap-3"
+              aria-label={sheetState === 'collapsed' ? 'Expand panel' : 'Toggle panel size'}
             >
               <Avatar person={selectedPerson} size="sm" />
               <span className="flex-1 text-left font-medium text-foreground">

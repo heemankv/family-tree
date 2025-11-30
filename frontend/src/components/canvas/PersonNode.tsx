@@ -28,7 +28,7 @@ const ME_BADGE_STYLES = [
   'rounded-full flex items-center gap-0.5 shadow-sm',
 ].join(' ');
 
-const HANDLE_STYLES = '!opacity-0 !w-0 !h-0';
+const HANDLE_STYLES = '!opacity-0 !w-3 !h-3 !min-w-0 !min-h-0';
 
 const NAME_MAX_LENGTH = 18;
 
@@ -63,8 +63,8 @@ function PersonNodeComponent({ data }: PersonNodeProps) {
         </div>
       )}
 
-      <Handle type="target" position={Position.Top} className={HANDLE_STYLES} />
-      <Handle type="source" position={Position.Bottom} className={HANDLE_STYLES} />
+      <Handle type="source" position={Position.Top} id="top" className={HANDLE_STYLES} />
+      <Handle type="target" position={Position.Bottom} id="bottom" className={HANDLE_STYLES} />
 
       <div className="flex flex-col items-center text-center gap-2">
         <Avatar person={person} size="md" />
