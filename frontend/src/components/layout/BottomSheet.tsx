@@ -1,11 +1,12 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { ChevronUp, ChevronDown, X, Heart } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronLeft, X, Heart } from 'lucide-react';
 import { useAppStore, useSelectedPerson } from '@/store/useAppStore';
 import { PersonDetail } from '@/components/person/PersonDetail';
 import { CoupleDetail } from '@/components/person/CoupleDetail';
 import { Avatar } from '@/components/ui/Avatar';
+import { useIsLandscape } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
 
 type SheetState = 'collapsed' | 'half' | 'full';
@@ -13,6 +14,7 @@ type SheetState = 'collapsed' | 'half' | 'full';
 export function BottomSheet() {
   const { sidebarOpen, setSidebarOpen, setSelectedPerson, selectedCouple, setSelectedCouple } = useAppStore();
   const selectedPerson = useSelectedPerson();
+  const isLandscape = useIsLandscape();
   const [sheetState, setSheetState] = useState<SheetState>('collapsed');
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef<number>(0);
@@ -93,6 +95,82 @@ export function BottomSheet() {
       ? `${selectedCouple.person1.name.split(' ')[0]} & ${selectedCouple.person2.name.split(' ')[0]}`
       : '';
 
+  // Landscape mode: Show side panel instead of bottom sheet
+  if (isLandscape) {
+    return (
+      <>
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-black/20 z-40"
+          onClick={handleClose}
+        />
+
+        {/* Side Panel for Landscape */}
+        <div
+          ref={sheetRef}
+          role="dialog"
+          aria-label={`Details for ${displayName}`}
+          aria-modal="true"
+          className={cn(
+            'fixed top-14 right-0 h-[calc(100vh-56px)] w-72 bg-surface z-50',
+            'shadow-2xl border-l border-border',
+            'transform transition-transform duration-300 ease-out'
+          )}
+        >
+          {/* Header */}
+          <div className="sticky top-0 bg-surface z-10 border-b border-border">
+            <div className="px-3 py-2 flex items-center gap-3">
+              <button
+                onClick={handleClose}
+                aria-label="Close panel"
+                className="p-1 hover:bg-background rounded"
+              >
+                <ChevronLeft className="w-5 h-5 text-muted" />
+              </button>
+              {selectedPerson ? (
+                <Avatar person={selectedPerson} size="xs" />
+              ) : selectedCouple ? (
+                <div className="flex items-center gap-1">
+                  <Avatar person={selectedCouple.person1} size="xs" />
+                  <Heart className="w-3 h-3 text-red-500 fill-red-500" />
+                  <Avatar person={selectedCouple.person2} size="xs" />
+                </div>
+              ) : null}
+              <span className="flex-1 font-medium text-foreground truncate text-sm">
+                {displayName}
+              </span>
+              <button
+                onClick={handleClose}
+                aria-label="Close panel"
+                className="p-1 hover:bg-background rounded"
+              >
+                <X className="w-4 h-4 text-muted" />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="overflow-y-auto h-[calc(100%-48px)]">
+            {selectedPerson ? (
+              <PersonDetail
+                person={selectedPerson}
+                onPersonClick={handlePersonClick}
+                compact
+              />
+            ) : selectedCouple ? (
+              <CoupleDetail
+                couple={selectedCouple}
+                onPersonClick={handlePersonClick}
+                compact
+              />
+            ) : null}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Portrait mode: Standard bottom sheet
   return (
     <>
       {/* Backdrop */}
@@ -147,32 +225,57 @@ export function BottomSheet() {
               <span className="flex-1 text-left font-medium text-foreground">
                 {displayName}
               </span>
-              {sheetState === 'collapsed' ? (
-                <ChevronUp className="w-5 h-5 text-muted" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-muted" />
-              )}
+              <ChevronUp className="w-5 h-5 text-muted" />
             </button>
           )}
 
-          {/* Full Header with Close */}
+          {/* Full Header with Profile - Google style */}
           {sheetState === 'full' && (
-            <div className="px-4 pb-2 flex items-center justify-between">
-              <button
-                onClick={() => setSheetState('half')}
-                aria-label="Minimize panel"
-              >
-                <ChevronDown className="w-5 h-5 text-muted" />
-              </button>
-              <span className="font-medium text-foreground">
-                {displayName}
-              </span>
-              <button
-                onClick={handleClose}
-                aria-label="Close panel"
-              >
-                <X className="w-5 h-5 text-muted" />
-              </button>
+            <div className="px-4 pb-4">
+              {/* Top bar with minimize/close */}
+              <div className="flex items-center justify-between mb-3">
+                <button
+                  onClick={() => setSheetState('half')}
+                  aria-label="Minimize panel"
+                >
+                  <ChevronDown className="w-5 h-5 text-muted" />
+                </button>
+                <button
+                  onClick={handleClose}
+                  aria-label="Close panel"
+                >
+                  <X className="w-5 h-5 text-muted" />
+                </button>
+              </div>
+              {/* Profile section */}
+              <div className="flex items-center gap-3">
+                {selectedPerson ? (
+                  <Avatar person={selectedPerson} size="lg" />
+                ) : selectedCouple ? (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Avatar person={selectedCouple.person1} size="sm" />
+                    <Heart className="w-3 h-3 text-red-500 fill-red-500" />
+                    <Avatar person={selectedCouple.person2} size="sm" />
+                  </div>
+                ) : null}
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold text-foreground">
+                    {displayName}
+                  </h2>
+                  {selectedPerson && (
+                    <p className="text-sm text-muted">
+                      {selectedPerson.profession} · {selectedPerson.current_location}
+                    </p>
+                  )}
+                  {selectedCouple && (
+                    <p className="text-sm text-muted">
+                      {selectedCouple.person1.current_location}
+                      {selectedCouple.person1.current_location !== selectedCouple.person2.current_location &&
+                        ` & ${selectedCouple.person2.current_location}`}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -184,11 +287,13 @@ export function BottomSheet() {
               <PersonDetail
                 person={selectedPerson}
                 onPersonClick={handlePersonClick}
+                compact
               />
             ) : selectedCouple ? (
               <CoupleDetail
                 couple={selectedCouple}
                 onPersonClick={handlePersonClick}
+                compact
               />
             ) : null}
           </div>

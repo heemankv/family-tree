@@ -5,9 +5,10 @@ import { cn } from '@/lib/utils';
 import { Person, Gender } from '@/types';
 
 // Size configuration
-type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
+type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZE_CLASSES: Record<AvatarSize, string> = {
+  xs: 'w-8 h-8',
   sm: 'w-16 h-16',
   md: 'w-24 h-24',
   lg: 'w-32 h-32',

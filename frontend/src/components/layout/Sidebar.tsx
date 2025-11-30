@@ -52,7 +52,7 @@ export function Sidebar() {
       className={cn(
         'fixed top-14 right-0 h-[calc(100vh-56px)] w-96 bg-surface shadow-2xl z-40',
         'transform transition-transform duration-300 ease-in-out',
-        'border-l border-border',
+        'border-l border-border overflow-y-auto',
         sidebarOpen ? 'translate-x-0' : 'translate-x-full'
       )}
     >

@@ -23,9 +23,10 @@ interface PersonDetailProps {
   person: Person;
   onClose?: () => void;
   onPersonClick?: (personId: string) => void;
+  compact?: boolean; // Mobile-optimized compact layout
 }
 
-export function PersonDetail({ person, onClose, onPersonClick }: PersonDetailProps) {
+export function PersonDetail({ person, onClose, onPersonClick, compact = false }: PersonDetailProps) {
   const [family, setFamily] = useState<ImmediateFamily | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +51,71 @@ export function PersonDetail({ person, onClose, onPersonClick }: PersonDetailPro
 
   const age = calculateAge(person.birth_date, person.death_date);
 
+  // Compact layout for mobile
+  if (compact) {
+    return (
+      <div className="h-full flex flex-col">
+        {/* Compact Details - single line */}
+        <div className="px-4 py-2 flex items-center gap-4 text-xs border-b border-border">
+          <span className="text-muted">{age} yrs · {person.gender}</span>
+          <span className="text-muted">{person.current_location}</span>
+          {person.aka && person.aka.length > 0 && (
+            <span className="text-muted truncate">AKA: {person.aka.join(', ')}</span>
+          )}
+        </div>
+
+        {/* Immediate Family Section */}
+        <div className="flex-1 overflow-y-auto px-4 py-3">
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="w-4 h-4 text-muted" />
+            <h3 className="font-medium text-foreground text-sm">Immediate Family</h3>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-4">
+              <LoadingSpinner size="sm" />
+            </div>
+          ) : error ? (
+            <div className="py-2 text-center">
+              <p className="text-red-600 dark:text-red-400 text-xs">{error}</p>
+              <button
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  api.getPersonFamily(person.id)
+                    .then(setFamily)
+                    .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load'))
+                    .finally(() => setLoading(false));
+                }}
+                className="mt-1 text-xs text-primary hover:underline"
+              >
+                Try again
+              </button>
+            </div>
+          ) : family ? (
+            <div className="space-y-3">
+              {family.spouse && (
+                <CompactFamilyGroup label="Spouse" members={[family.spouse]} onMemberClick={onPersonClick} />
+              )}
+              {family.children.length > 0 && (
+                <CompactFamilyGroup label="Children" members={family.children} onMemberClick={onPersonClick} />
+              )}
+              {family.parents.length > 0 && (
+                <CompactFamilyGroup label="Parents" members={family.parents} onMemberClick={onPersonClick} />
+              )}
+              {family.siblings.length > 0 && (
+                <CompactFamilyGroup label="Siblings" members={family.siblings} onMemberClick={onPersonClick} />
+              )}
+            </div>
+          ) : (
+            <p className="text-muted text-xs">No family information available.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout (unchanged)
   return (
     <div className="h-full flex flex-col">
       {/* Header with close button */}
@@ -121,7 +187,7 @@ export function PersonDetail({ person, onClose, onPersonClick }: PersonDetailPro
       </div>
 
       {/* Immediate Family Section */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="px-6 py-4">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-4 h-4 text-muted" />
           <h3 className="font-medium text-foreground">Immediate Family</h3>
@@ -237,6 +303,36 @@ function FamilyGroup({
           >
             <Avatar person={member} size="sm" />
             <span className="flex-1 text-sm text-foreground">{member.name}</span>
+            <ChevronRight className="w-4 h-4 text-muted" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Compact family group for mobile
+function CompactFamilyGroup({
+  label,
+  members,
+  onMemberClick,
+}: {
+  label: string;
+  members: Person[];
+  onMemberClick?: (personId: string) => void;
+}) {
+  return (
+    <div>
+      <p className="text-xs text-muted mb-2">{label}</p>
+      <div className="space-y-1.5">
+        {members.map((member) => (
+          <button
+            key={member.id}
+            onClick={() => onMemberClick?.(member.id)}
+            className="w-full flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-background transition-colors text-left"
+          >
+            <Avatar person={member} size="sm" />
+            <span className="flex-1 text-sm text-foreground truncate">{member.name}</span>
             <ChevronRight className="w-4 h-4 text-muted" />
           </button>
         ))}

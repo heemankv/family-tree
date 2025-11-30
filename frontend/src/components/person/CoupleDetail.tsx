@@ -17,14 +17,116 @@ interface CoupleDetailProps {
   couple: CoupleSelection;
   onClose?: () => void;
   onPersonClick?: (personId: string) => void;
+  compact?: boolean; // Mobile-optimized compact layout
 }
 
-export function CoupleDetail({ couple, onClose, onPersonClick }: CoupleDetailProps) {
+export function CoupleDetail({ couple, onClose, onPersonClick, compact = false }: CoupleDetailProps) {
   const { person1, person2, marriageDate, children, person1Parents, person2Parents } = couple;
 
   // Get locations - show both if different
   const locations = getUniqueLocations(person1, person2);
 
+  // Compact layout for mobile
+  if (compact) {
+    return (
+      <div className="h-full flex flex-col">
+        {/* Compact Details - single line */}
+        <div className="px-4 py-2 flex items-center gap-4 text-xs border-b border-border">
+          {marriageDate && <span className="text-muted">Married {formatDate(marriageDate).split(',')[0]}</span>}
+          <span className="text-muted truncate">{locations.join(' & ')}</span>
+        </div>
+
+        {/* Compact Family Section */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+          {/* Children */}
+          <div>
+            <p className="text-xs text-muted mb-2">Children {children.length > 0 && `(${children.length})`}</p>
+            {children.length > 0 ? (
+              <div className="space-y-1.5">
+                {children.map((child) => (
+                  <button
+                    key={child.id}
+                    onClick={() => onPersonClick?.(child.id)}
+                    className="w-full flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-background transition-colors text-left"
+                  >
+                    <Avatar person={child} size="sm" />
+                    <span className="flex-1 text-sm text-foreground truncate">{child.name}</span>
+                    <ChevronRight className="w-4 h-4 text-muted" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted text-xs px-2">No children</p>
+            )}
+          </div>
+
+          {/* Person 1's Parents */}
+          {person1Parents.length > 0 && (
+            <div>
+              <p className="text-xs text-muted mb-2">{person1.name.split(' ')[0]}&apos;s Parents</p>
+              <div className="space-y-1.5">
+                {person1Parents.map((parent) => (
+                  <button
+                    key={parent.id}
+                    onClick={() => onPersonClick?.(parent.id)}
+                    className="w-full flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-background transition-colors text-left"
+                  >
+                    <Avatar person={parent} size="sm" />
+                    <span className="flex-1 text-sm text-foreground truncate">{parent.name}</span>
+                    <ChevronRight className="w-4 h-4 text-muted" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Person 2's Parents */}
+          {person2Parents.length > 0 && (
+            <div>
+              <p className="text-xs text-muted mb-2">{person2.name.split(' ')[0]}&apos;s Parents</p>
+              <div className="space-y-1.5">
+                {person2Parents.map((parent) => (
+                  <button
+                    key={parent.id}
+                    onClick={() => onPersonClick?.(parent.id)}
+                    className="w-full flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-background transition-colors text-left"
+                  >
+                    <Avatar person={parent} size="sm" />
+                    <span className="flex-1 text-sm text-foreground truncate">{parent.name}</span>
+                    <ChevronRight className="w-4 h-4 text-muted" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Compact View Individual Profiles */}
+        <div className="px-4 py-3 border-t border-border">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs"
+              onClick={() => onPersonClick?.(person1.id)}
+            >
+              View {person1.name.split(' ')[0]}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs"
+              onClick={() => onPersonClick?.(person2.id)}
+            >
+              View {person2.name.split(' ')[0]}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout (unchanged)
   return (
     <div className="h-full flex flex-col">
       {/* Header with close button */}
@@ -73,7 +175,7 @@ export function CoupleDetail({ couple, onClose, onPersonClick }: CoupleDetailPro
       </div>
 
       {/* Children & Parents Section */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+      <div className="px-6 py-4 space-y-6">
         {/* Children */}
         <div>
           <div className="flex items-center gap-2 mb-3">

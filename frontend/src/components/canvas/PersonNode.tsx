@@ -63,8 +63,8 @@ function PersonNodeComponent({ data }: PersonNodeProps) {
         </div>
       )}
 
-      <Handle type="source" position={Position.Top} id="top" className={HANDLE_STYLES} />
-      <Handle type="target" position={Position.Bottom} id="bottom" className={HANDLE_STYLES} />
+      <Handle type="target" position={Position.Top} id="top" className={HANDLE_STYLES} />
+      <Handle type="source" position={Position.Bottom} id="bottom" className={HANDLE_STYLES} />
 
       <div className="flex flex-col items-center text-center gap-2">
         <Avatar person={person} size="md" />

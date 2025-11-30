@@ -306,7 +306,7 @@ export function layoutFamilyTree(
 
   for (let gen = minGen; gen <= maxGen; gen++) {
     const nodeInfos = genNodeInfos.get(gen) || [];
-    const y = (maxGen - gen) * ROW_HEIGHT;
+    const y = (gen - minGen) * ROW_HEIGHT;
 
     for (const info of nodeInfos) {
       if (info.persons.length === 2) {
@@ -391,8 +391,8 @@ export function layoutFamilyTree(
       id: `edge-${edgeKey}`,
       source: parentNodeId,
       target: childNodeId,
-      sourceHandle: 'top',     // parent's top handle (going up to children)
-      targetHandle: 'bottom',  // child's bottom handle (receiving from parents)
+      sourceHandle: 'bottom',  // parent's bottom handle (going down to children)
+      targetHandle: 'top',     // child's top handle (receiving from parents)
       type: 'simplebezier',
       className: isHighlighted ? 'highlighted-edge' : '',
       zIndex: isHighlighted ? 1000 : 0,

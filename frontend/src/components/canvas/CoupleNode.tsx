@@ -109,8 +109,8 @@ function CoupleNodeComponent({ data }: CoupleNodeProps) {
 
   return (
     <div className={cn(CARD_BASE_STYLES, cardBorderStyles)}>
-      <Handle type="source" position={Position.Top} id="top" className={HANDLE_STYLES} />
-      <Handle type="target" position={Position.Bottom} id="bottom" className={HANDLE_STYLES} />
+      <Handle type="target" position={Position.Top} id="top" className={HANDLE_STYLES} />
+      <Handle type="source" position={Position.Bottom} id="bottom" className={HANDLE_STYLES} />
 
       <PersonCard {...person1State} />
       <div className={DIVIDER_STYLES} />
