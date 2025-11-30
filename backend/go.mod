@@ -1,6 +1,6 @@
 module github.com/heemankverma/family_tree/backend
 
-go 1.21
+go 1.23.0
 
 require (
 	github.com/gin-contrib/cors v1.7.6
