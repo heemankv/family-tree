@@ -41,6 +41,7 @@ interface CoupleNodeData {
   person2: Person;
   isSelected: boolean;
   selectedPersonId: string | null;
+  isCoupleSelected?: boolean;
 }
 
 interface CoupleNodeProps {
@@ -123,6 +124,7 @@ function arePropsEqual(prevProps: CoupleNodeProps, nextProps: CoupleNodeProps): 
   return (
     prevProps.data.isSelected === nextProps.data.isSelected &&
     prevProps.data.selectedPersonId === nextProps.data.selectedPersonId &&
+    prevProps.data.isCoupleSelected === nextProps.data.isCoupleSelected &&
     prevProps.data.person1.id === nextProps.data.person1.id &&
     prevProps.data.person2.id === nextProps.data.person2.id
   );

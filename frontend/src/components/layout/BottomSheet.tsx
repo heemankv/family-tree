@@ -1,30 +1,31 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { ChevronUp, ChevronDown, X } from 'lucide-react';
+import { ChevronUp, ChevronDown, X, Heart } from 'lucide-react';
 import { useAppStore, useSelectedPerson } from '@/store/useAppStore';
 import { PersonDetail } from '@/components/person/PersonDetail';
+import { CoupleDetail } from '@/components/person/CoupleDetail';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
 
 type SheetState = 'collapsed' | 'half' | 'full';
 
 export function BottomSheet() {
-  const { sidebarOpen, setSidebarOpen, setSelectedPerson } = useAppStore();
+  const { sidebarOpen, setSidebarOpen, setSelectedPerson, selectedCouple, setSelectedCouple } = useAppStore();
   const selectedPerson = useSelectedPerson();
   const [sheetState, setSheetState] = useState<SheetState>('collapsed');
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef<number>(0);
   const dragStartState = useRef<SheetState>('collapsed');
 
-  // Reset to collapsed when person changes
+  // Reset to collapsed when person or couple changes
   useEffect(() => {
-    if (selectedPerson) {
+    if (selectedPerson || selectedCouple) {
       setSheetState('half');
     } else {
       setSheetState('collapsed');
     }
-  }, [selectedPerson?.id]);
+  }, [selectedPerson?.id, selectedCouple]);
 
   const handlePersonClick = (personId: string) => {
     setSelectedPerson(personId);
@@ -35,6 +36,7 @@ export function BottomSheet() {
     setTimeout(() => {
       setSidebarOpen(false);
       setSelectedPerson(null);
+      setSelectedCouple(null);
     }, 300);
   };
 
@@ -80,9 +82,16 @@ export function BottomSheet() {
     }
   };
 
-  if (!sidebarOpen || !selectedPerson) {
+  if (!sidebarOpen || (!selectedPerson && !selectedCouple)) {
     return null;
   }
+
+  // Get display name for collapsed view
+  const displayName = selectedPerson
+    ? selectedPerson.name
+    : selectedCouple
+      ? `${selectedCouple.person1.name.split(' ')[0]} & ${selectedCouple.person2.name.split(' ')[0]}`
+      : '';
 
   return (
     <>
@@ -99,7 +108,7 @@ export function BottomSheet() {
       <div
         ref={sheetRef}
         role="dialog"
-        aria-label={`Details for ${selectedPerson.name}`}
+        aria-label={`Details for ${displayName}`}
         aria-modal="true"
         className={cn(
           'fixed bottom-0 left-0 right-0 bg-surface z-50',
@@ -126,9 +135,17 @@ export function BottomSheet() {
               className="w-full px-4 pb-3 flex items-center gap-3"
               aria-label={sheetState === 'collapsed' ? 'Expand panel' : 'Toggle panel size'}
             >
-              <Avatar person={selectedPerson} size="sm" />
+              {selectedPerson ? (
+                <Avatar person={selectedPerson} size="sm" />
+              ) : selectedCouple ? (
+                <div className="flex items-center gap-1">
+                  <Avatar person={selectedCouple.person1} size="sm" />
+                  <Heart className="w-3 h-3 text-red-500 fill-red-500" />
+                  <Avatar person={selectedCouple.person2} size="sm" />
+                </div>
+              ) : null}
               <span className="flex-1 text-left font-medium text-foreground">
-                {selectedPerson.name}
+                {displayName}
               </span>
               {sheetState === 'collapsed' ? (
                 <ChevronUp className="w-5 h-5 text-muted" />
@@ -148,7 +165,7 @@ export function BottomSheet() {
                 <ChevronDown className="w-5 h-5 text-muted" />
               </button>
               <span className="font-medium text-foreground">
-                {selectedPerson.name}
+                {displayName}
               </span>
               <button
                 onClick={handleClose}
@@ -163,10 +180,17 @@ export function BottomSheet() {
         {/* Content */}
         {sheetState !== 'collapsed' && (
           <div className="overflow-y-auto h-full pb-safe">
-            <PersonDetail
-              person={selectedPerson}
-              onPersonClick={handlePersonClick}
-            />
+            {selectedPerson ? (
+              <PersonDetail
+                person={selectedPerson}
+                onPersonClick={handlePersonClick}
+              />
+            ) : selectedCouple ? (
+              <CoupleDetail
+                couple={selectedCouple}
+                onPersonClick={handlePersonClick}
+              />
+            ) : null}
           </div>
         )}
       </div>

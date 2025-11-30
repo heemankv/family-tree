@@ -21,7 +21,7 @@ import { layoutFamilyTree } from '@/lib/graph-layout';
 import { useAppStore } from '@/store/useAppStore';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ME_PERSON_ID } from '@/lib/constants';
-import { Link } from '@/types';
+import { Link, Person, CoupleSelection } from '@/types';
 
 // Constants
 const NODE_TYPES = {
@@ -61,11 +61,41 @@ function isInputElement(target: HTMLElement): boolean {
   );
 }
 
-function buildRelationshipMaps(selectedPersonId: string | null, links: Link[]): RelationshipMaps {
+function buildRelationshipMaps(
+  selectedPersonId: string | null,
+  selectedCouple: CoupleSelection | null,
+  links: Link[]
+): RelationshipMaps {
   const parentIds = new Set<string>();
   const childIds = new Set<string>();
 
-  if (!selectedPersonId || !links) {
+  if (!links) {
+    return { parentIds, childIds };
+  }
+
+  // Handle couple selection - get parents of both persons and shared children
+  if (selectedCouple) {
+    const person1Id = selectedCouple.person1.id;
+    const person2Id = selectedCouple.person2.id;
+
+    for (const link of links) {
+      if (link.relationship === 'PARENT_CHILD') {
+        // Parents of either person in the couple
+        if (link.target === person1Id || link.target === person2Id) {
+          parentIds.add(link.source);
+        }
+        // Children of either person in the couple
+        if (link.source === person1Id || link.source === person2Id) {
+          childIds.add(link.target);
+        }
+      }
+    }
+
+    return { parentIds, childIds };
+  }
+
+  // Handle individual person selection
+  if (!selectedPersonId) {
     return { parentIds, childIds };
   }
 
@@ -101,9 +131,48 @@ function buildRelationshipMaps(selectedPersonId: string | null, links: Link[]): 
 function isEdgeHighlighted(
   edge: Edge,
   selectedPersonId: string | null,
+  selectedCouple: CoupleSelection | null,
   parentIds: Set<string>,
   childIds: Set<string>
 ): boolean {
+  // Handle couple selection
+  if (selectedCouple) {
+    const person1Id = selectedCouple.person1.id;
+    const person2Id = selectedCouple.person2.id;
+
+    // Edge goes to either person in the couple (from their parents)
+    const edgeToCouple =
+      edge.target === person1Id ||
+      edge.target === person2Id ||
+      edge.target.includes(person1Id) ||
+      edge.target.includes(person2Id);
+
+    if (edgeToCouple) {
+      // Check if source is a parent of either person
+      return Array.from(parentIds).some(
+        (pid) => edge.source === pid || edge.source.includes(pid)
+      );
+    }
+
+    // Edge goes to a child (from the couple)
+    const edgeToChild = Array.from(childIds).some(
+      (cid) => edge.target === cid || edge.target.includes(cid)
+    );
+
+    if (edgeToChild) {
+      // Check if source is either person in the couple or a couple node containing them
+      return (
+        edge.source === person1Id ||
+        edge.source === person2Id ||
+        edge.source.includes(person1Id) ||
+        edge.source.includes(person2Id)
+      );
+    }
+
+    return false;
+  }
+
+  // Handle individual person selection
   if (!selectedPersonId) return false;
 
   const edgeToSelected = edge.target === selectedPersonId || edge.target.includes(selectedPersonId);
@@ -127,10 +196,11 @@ function isEdgeHighlighted(
 function updateEdgeHighlighting(
   edge: Edge,
   selectedPersonId: string | null,
+  selectedCouple: CoupleSelection | null,
   parentIds: Set<string>,
   childIds: Set<string>
 ): Edge {
-  const highlighted = isEdgeHighlighted(edge, selectedPersonId, parentIds, childIds);
+  const highlighted = isEdgeHighlighted(edge, selectedPersonId, selectedCouple, parentIds, childIds);
 
   return {
     ...edge,
@@ -192,7 +262,9 @@ function FamilyTreeCanvasInner() {
   const storeNodes = useAppStore((state) => state.nodes);
   const links = useAppStore((state) => state.links);
   const selectedPersonId = useAppStore((state) => state.selectedPersonId);
+  const selectedCouple = useAppStore((state) => state.selectedCouple);
   const setSelectedPerson = useAppStore((state) => state.setSelectedPerson);
+  const setSelectedCouple = useAppStore((state) => state.setSelectedCouple);
   const isLoading = useAppStore((state) => state.isLoading);
   const layoutVersion = useAppStore((state) => state.layoutVersion);
 
@@ -219,8 +291,8 @@ function FamilyTreeCanvasInner() {
 
   // Build relationship maps for edge highlighting
   const { parentIds, childIds } = useMemo(
-    () => buildRelationshipMaps(selectedPersonId, links),
-    [selectedPersonId, links]
+    () => buildRelationshipMaps(selectedPersonId, selectedCouple, links),
+    [selectedPersonId, selectedCouple, links]
   );
 
   // Update selection state
@@ -229,10 +301,15 @@ function FamilyTreeCanvasInner() {
       currentNodes.map((node) => {
         if (node.type === 'coupleNode') {
           const data = node.data as { person1: { id: string }; person2: { id: string } };
-          const isSelected = selectedPersonId === data.person1.id || selectedPersonId === data.person2.id;
+          // Check if this couple card is selected (either as a couple or one person in it)
+          const isCoupleSelected = selectedCouple !== null &&
+            selectedCouple.person1.id === data.person1.id &&
+            selectedCouple.person2.id === data.person2.id;
+          const isPersonSelected = selectedPersonId === data.person1.id || selectedPersonId === data.person2.id;
+          const isSelected = isCoupleSelected || isPersonSelected;
           return {
             ...node,
-            data: { ...node.data, isSelected, selectedPersonId },
+            data: { ...node.data, isSelected, selectedPersonId, isCoupleSelected },
             selected: isSelected,
           };
         }
@@ -244,16 +321,67 @@ function FamilyTreeCanvasInner() {
         };
       })
     );
-  }, [selectedPersonId, setNodes]);
+  }, [selectedPersonId, selectedCouple, setNodes]);
 
   // Update edge highlighting
   useEffect(() => {
     setEdges((currentEdges) =>
       currentEdges.map((edge) =>
-        updateEdgeHighlighting(edge, selectedPersonId, parentIds, childIds)
+        updateEdgeHighlighting(edge, selectedPersonId, selectedCouple, parentIds, childIds)
       )
     );
-  }, [selectedPersonId, parentIds, childIds, setEdges]);
+  }, [selectedPersonId, selectedCouple, parentIds, childIds, setEdges]);
+
+  // Helper to build couple selection data
+  const buildCoupleSelection = useCallback(
+    (person1: Person, person2: Person): CoupleSelection => {
+      // Find marriage date from links
+      let marriageDate: string | undefined;
+      const childIds = new Set<string>();
+      const person1ParentIds = new Set<string>();
+      const person2ParentIds = new Set<string>();
+
+      for (const link of links) {
+        if (link.relationship === 'SPOUSE') {
+          if (
+            (link.source === person1.id && link.target === person2.id) ||
+            (link.source === person2.id && link.target === person1.id)
+          ) {
+            marriageDate = link.start_date;
+          }
+        }
+
+        // Find children (anyone where either person1 or person2 is a parent)
+        if (link.relationship === 'PARENT_CHILD') {
+          if (link.source === person1.id || link.source === person2.id) {
+            childIds.add(link.target);
+          }
+          // Find parents of person1
+          if (link.target === person1.id) {
+            person1ParentIds.add(link.source);
+          }
+          // Find parents of person2
+          if (link.target === person2.id) {
+            person2ParentIds.add(link.source);
+          }
+        }
+      }
+
+      const children = storeNodes.filter((n) => childIds.has(n.id));
+      const person1Parents = storeNodes.filter((n) => person1ParentIds.has(n.id));
+      const person2Parents = storeNodes.filter((n) => person2ParentIds.has(n.id));
+
+      return {
+        person1,
+        person2,
+        marriageDate,
+        children,
+        person1Parents,
+        person2Parents,
+      };
+    },
+    [links, storeNodes]
+  );
 
   // Event handlers
   const onNodeClick: NodeMouseHandler = useCallback(
@@ -262,6 +390,7 @@ function FamilyTreeCanvasInner() {
         const target = event.target as HTMLElement;
         const personElement = target.closest('[data-person-id]');
 
+        // If clicked on a specific person inside the couple card
         if (personElement) {
           const personId = personElement.getAttribute('data-person-id');
           if (personId) {
@@ -270,13 +399,15 @@ function FamilyTreeCanvasInner() {
           }
         }
 
-        const data = node.data as { person1: { id: string } };
-        setSelectedPerson(data.person1.id);
+        // Clicked on couple card background - show couple details
+        const data = node.data as { person1: Person; person2: Person };
+        const coupleData = buildCoupleSelection(data.person1, data.person2);
+        setSelectedCouple(coupleData);
       } else {
         setSelectedPerson(node.id);
       }
     },
-    [setSelectedPerson]
+    [setSelectedPerson, setSelectedCouple, buildCoupleSelection]
   );
 
   const onPaneClick = useCallback(() => {

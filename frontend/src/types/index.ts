@@ -27,6 +27,16 @@ export interface Link {
   end_date?: string;
 }
 
+// CoupleSelection for sidebar display
+export interface CoupleSelection {
+  person1: Person;
+  person2: Person;
+  marriageDate?: string;
+  children: Person[];
+  person1Parents: Person[];
+  person2Parents: Person[];
+}
+
 // TreeResponse from the API
 export interface TreeResponse {
   nodes: Person[];

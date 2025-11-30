@@ -150,15 +150,6 @@ export function PersonDetail({ person, onClose, onPersonClick }: PersonDetailPro
           </div>
         ) : family ? (
           <div className="space-y-3">
-            {/* Parents */}
-            {family.parents.length > 0 && (
-              <FamilyGroup
-                label="Parents"
-                members={family.parents}
-                onMemberClick={onPersonClick}
-              />
-            )}
-
             {/* Spouse */}
             {family.spouse && (
               <FamilyGroup
@@ -168,20 +159,29 @@ export function PersonDetail({ person, onClose, onPersonClick }: PersonDetailPro
               />
             )}
 
-            {/* Siblings */}
-            {family.siblings.length > 0 && (
-              <FamilyGroup
-                label="Siblings"
-                members={family.siblings}
-                onMemberClick={onPersonClick}
-              />
-            )}
-
             {/* Children */}
             {family.children.length > 0 && (
               <FamilyGroup
                 label="Children"
                 members={family.children}
+                onMemberClick={onPersonClick}
+              />
+            )}
+
+            {/* Parents */}
+            {family.parents.length > 0 && (
+              <FamilyGroup
+                label="Parents"
+                members={family.parents}
+                onMemberClick={onPersonClick}
+              />
+            )}
+
+            {/* Siblings */}
+            {family.siblings.length > 0 && (
+              <FamilyGroup
+                label="Siblings"
+                members={family.siblings}
                 onMemberClick={onPersonClick}
               />
             )}
