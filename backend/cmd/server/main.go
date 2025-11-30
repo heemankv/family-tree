@@ -42,7 +42,13 @@ func main() {
 	router := gin.Default()
 
 	// Apply CORS middleware
-	router.Use(middleware.CORSConfig())
+	if len(cfg.AllowedOrigins) > 0 {
+		log.Printf("CORS: Allowing origins: %v", cfg.AllowedOrigins)
+		router.Use(middleware.CORSConfigProduction(cfg.AllowedOrigins))
+	} else {
+		log.Println("CORS: Development mode - allowing all origins")
+		router.Use(middleware.CORSConfig())
+	}
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {

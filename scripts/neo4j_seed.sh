@@ -1,6 +1,7 @@
 #!/bin/bash
 # Neo4j Seed Data Script
 # This script inserts sample family tree data into Neo4j
+# Supports both local Docker and Neo4j Aura (cloud)
 
 NEO4J_URI="${NEO4J_URI:-bolt://localhost:7687}"
 NEO4J_USER="${NEO4J_USER:-neo4j}"
@@ -10,6 +11,29 @@ echo "=== Neo4j Seed Data Script ==="
 echo "URI: $NEO4J_URI"
 echo "User: $NEO4J_USER"
 echo ""
+
+# Function to run cypher commands
+run_cypher() {
+    local script="$1"
+
+    # Check if URI is remote (Aura or other cloud)
+    if [[ "$NEO4J_URI" == neo4j+s://* ]] || [[ "$NEO4J_URI" == neo4j+ssc://* ]] || [[ "$NEO4J_URI" == bolt+s://* ]]; then
+        echo "Connecting to remote Neo4j (Aura)..."
+        if command -v cypher-shell &> /dev/null; then
+            echo "$script" | cypher-shell -a "$NEO4J_URI" -u "$NEO4J_USER" -p "$NEO4J_PASSWORD"
+        else
+            echo "ERROR: cypher-shell not found. Install it with: brew install cypher-shell"
+            echo "Or download from: https://neo4j.com/download-center/#cypher-shell"
+            exit 1
+        fi
+    elif command -v cypher-shell &> /dev/null; then
+        echo "Using local cypher-shell..."
+        echo "$script" | cypher-shell -a "$NEO4J_URI" -u "$NEO4J_USER" -p "$NEO4J_PASSWORD"
+    else
+        echo "Using Docker to run cypher-shell..."
+        echo "$script" | docker exec -i family_tree_neo4j cypher-shell -u "$NEO4J_USER" -p "$NEO4J_PASSWORD"
+    fi
+}
 
 # The Cypher script to seed data
 CYPHER_SCRIPT='
@@ -683,15 +707,8 @@ CREATE (a)-[:SIBLING]->(b);
 MATCH (n:Person) RETURN count(n) as total_persons;
 '
 
-# Check if cypher-shell is available (Docker)
-if command -v cypher-shell &> /dev/null; then
-    echo "Using cypher-shell..."
-    echo "$CYPHER_SCRIPT" | cypher-shell -a "$NEO4J_URI" -u "$NEO4J_USER" -p "$NEO4J_PASSWORD"
-else
-    # Use Docker to run cypher-shell
-    echo "Using Docker to run cypher-shell..."
-    echo "$CYPHER_SCRIPT" | docker exec -i family_tree_neo4j cypher-shell -u "$NEO4J_USER" -p "$NEO4J_PASSWORD"
-fi
+# Run the seed script
+run_cypher "$CYPHER_SCRIPT"
 
 if [ $? -eq 0 ]; then
     echo ""

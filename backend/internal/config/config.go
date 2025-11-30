@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 // Config holds all configuration for the application
@@ -26,6 +27,9 @@ type Config struct {
 	// Rate limiting
 	RateLimitRequests      int
 	RateLimitWindowSeconds int
+
+	// CORS
+	AllowedOrigins []string
 }
 
 // Load reads configuration from environment variables
@@ -45,6 +49,8 @@ func Load() *Config {
 
 		RateLimitRequests:      getEnvInt("RATE_LIMIT_REQUESTS", 5),
 		RateLimitWindowSeconds: getEnvInt("RATE_LIMIT_WINDOW_SECONDS", 60),
+
+		AllowedOrigins: getEnvSlice("ALLOWED_ORIGINS", []string{}),
 	}
 }
 
@@ -62,6 +68,21 @@ func getEnvInt(key string, defaultValue int) int {
 		if parsed, err := strconv.Atoi(value); err == nil {
 			return parsed
 		}
+	}
+	return defaultValue
+}
+
+// getEnvSlice retrieves a comma-separated environment variable as a slice
+func getEnvSlice(key string, defaultValue []string) []string {
+	if value, exists := os.LookupEnv(key); exists && value != "" {
+		var result []string
+		for _, s := range strings.Split(value, ",") {
+			trimmed := strings.TrimSpace(s)
+			if trimmed != "" {
+				result = append(result, trimmed)
+			}
+		}
+		return result
 	}
 	return defaultValue
 }
