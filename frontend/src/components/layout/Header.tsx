@@ -54,25 +54,22 @@ export function Header() {
             </kbd>
           </button>
 
-          {/* Siri-style Query Button */}
+          {/* Dev Query Button */}
           <button
             onClick={() => setQueryModalOpen(true)}
             className={cn(
-              'relative w-10 h-10 rounded-full',
-              'bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500',
+              'w-8 h-8 rounded-full',
+              'bg-muted/20 hover:bg-muted/30',
+              'border border-border',
               'flex items-center justify-center',
-              'shadow-lg hover:shadow-xl',
               'transform hover:scale-105 active:scale-95',
               'transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2'
+              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
             )}
             aria-label="Open Cypher Query"
             title="Open Cypher Query (Developer Tool)"
           >
-            <Sparkles className="w-5 h-5 text-white" />
-
-            {/* Subtle glow effect */}
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 blur-md opacity-50 -z-10" />
+            <Sparkles className="w-4 h-4 text-muted" />
           </button>
         </div>
       </div>
