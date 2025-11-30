@@ -2,15 +2,16 @@ package models
 
 // Person represents an individual in the family tree
 type Person struct {
-	ID              string  `json:"id"`
-	Name            string  `json:"name"`
-	Gender          string  `json:"gender"`
-	IsAlive         bool    `json:"is_alive"`
-	BirthDate       string  `json:"birth_date"`
-	DeathDate       *string `json:"death_date"`
-	CurrentLocation string  `json:"current_location"`
-	Profession      string  `json:"profession"`
-	PhotoURL        string  `json:"photo_url"`
+	ID              string   `json:"id"`
+	Name            string   `json:"name"`
+	Aka             []string `json:"aka"`
+	Gender          string   `json:"gender"`
+	IsAlive         bool     `json:"is_alive"`
+	BirthDate       string   `json:"birth_date"`
+	DeathDate       *string  `json:"death_date"`
+	CurrentLocation string   `json:"current_location"`
+	Profession      string   `json:"profession"`
+	PhotoURL        string   `json:"photo_url"`
 }
 
 // Link represents a relationship between two people

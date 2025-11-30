@@ -338,6 +338,7 @@ func nodeToModel(node neo4j.Node) models.Person {
 	person := models.Person{
 		ID:              getStringProp(props, "id"),
 		Name:            getStringProp(props, "name"),
+		Aka:             getStringArrayProp(props, "aka"),
 		Gender:          getStringProp(props, "gender"),
 		IsAlive:         getBoolProp(props, "is_alive"),
 		BirthDate:       getDateProp(props, "birth_date"),
@@ -396,6 +397,25 @@ func getBoolProp(props map[string]interface{}, key string) bool {
 		}
 	}
 	return false
+}
+
+func getStringArrayProp(props map[string]interface{}, key string) []string {
+	if val, ok := props[key]; ok {
+		if arr, ok := val.([]interface{}); ok {
+			result := make([]string, 0, len(arr))
+			for _, item := range arr {
+				if s, ok := item.(string); ok {
+					result = append(result, s)
+				}
+			}
+			return result
+		}
+		// Handle case where it's stored as a single string
+		if s, ok := val.(string); ok && s != "" {
+			return []string{s}
+		}
+	}
+	return []string{}
 }
 
 func getDateProp(props map[string]interface{}, key string) string {

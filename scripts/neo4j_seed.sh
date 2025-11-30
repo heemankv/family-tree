@@ -28,6 +28,7 @@ FOR (p:Person) ON (p.name);
 CREATE (ggp1:Person {
   id: "ggp-001",
   name: "William Smith Sr.",
+  aka: ["Bill", "Big Will"],
   gender: "Male",
   is_alive: false,
   birth_date: "1900-01-15",
@@ -94,6 +95,7 @@ CREATE (gp1:Person {
 CREATE (gm1:Person {
   id: "gm-001",
   name: "Mary Smith",
+  aka: ["Nana", "Grandma Mary"],
   gender: "Female",
   is_alive: false,
   birth_date: "1932-07-22",
@@ -136,6 +138,7 @@ CREATE (gm2:Person {
 CREATE (dad:Person {
   id: "dad-001",
   name: "James Smith",
+  aka: ["Jim", "Jimmy"],
   gender: "Male",
   is_alive: true,
   birth_date: "1955-11-08",
@@ -265,6 +268,7 @@ CREATE (uncle4:Person {
 CREATE (me:Person {
   id: "me-001",
   name: "Alex Smith",
+  aka: ["Al", "Lexi"],
   gender: "Male",
   is_alive: true,
   birth_date: "1985-09-25",
@@ -289,6 +293,7 @@ CREATE (spouse:Person {
 CREATE (sibling1:Person {
   id: "sibling-001",
   name: "Emily Smith",
+  aka: ["Em", "Emmy"],
   gender: "Female",
   is_alive: true,
   birth_date: "1988-03-17",
@@ -424,6 +429,7 @@ CREATE (cousin8:Person {
 CREATE (child1:Person {
   id: "child-001",
   name: "Oliver Smith",
+  aka: ["Ollie"],
   gender: "Male",
   is_alive: true,
   birth_date: "2015-02-14",

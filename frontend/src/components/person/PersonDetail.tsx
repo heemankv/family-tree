@@ -8,7 +8,8 @@ import {
   Users,
   ChevronRight,
   X,
-  User
+  User,
+  Quote
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { LateBadge } from '@/components/ui/Badge';
@@ -83,6 +84,14 @@ export function PersonDetail({ person, onClose, onPersonClick }: PersonDetailPro
           label="Gender"
           value={person.gender}
         />
+
+        {person.aka && person.aka.length > 0 && (
+          <DetailRow
+            icon={<Quote className="w-4 h-4" />}
+            label="Also known as"
+            value={person.aka.join(', ')}
+          />
+        )}
 
         <DetailRow
           icon={<Calendar className="w-4 h-4" />}

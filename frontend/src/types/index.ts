@@ -8,6 +8,7 @@ export type RelationshipType = 'PARENT_CHILD' | 'SPOUSE' | 'SIBLING';
 export interface Person {
   id: string;
   name: string;
+  aka: string[];
   gender: Gender;
   is_alive: boolean;
   birth_date: string;
