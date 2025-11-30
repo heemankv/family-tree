@@ -28,6 +28,7 @@ Every individual in the tree is a node with the label `:Person`.
 |--------------|-----------|-------------|----------|
 | `id` | String | Unique identifier (e.g., "me-001") | Yes |
 | `name` | String | Full name of the individual | Yes |
+| `aka` | String[] | Array of nicknames/aliases | No |
 | `gender` | String | "Male", "Female", "Other" | Yes |
 | `is_alive` | Boolean | Determines if "Late" badge is shown | Yes |
 | `birth_date` | String | "YYYY-MM-DD" format | Yes |
@@ -49,6 +50,7 @@ The `gender` property uses exact string values:
 CREATE (p:Person {
   id: "me-001",
   name: "Alex Smith",
+  aka: ["Al", "Smithy"],
   gender: "Male",
   is_alive: true,
   birth_date: "1985-09-25",
@@ -58,6 +60,8 @@ CREATE (p:Person {
   photo_url: ""
 })
 ```
+
+**Note**: The `aka` property is an array of strings. If a person has no nicknames, this property can be omitted or set to an empty array `[]`.
 
 ---
 

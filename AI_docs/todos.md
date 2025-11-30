@@ -67,6 +67,33 @@
 
 - [x] Fix edge handles - connect to top/bottom edges of cards
 
+- [x] Add AKA/nicknames feature
+  - Backend: Added `Aka []string` to Person model
+  - Database: Added `aka` array property to Person nodes
+  - Frontend: Display nicknames in PersonDetail sidebar
+
+- [x] Add couple selection and detail view
+  - Click couple card background to see combined family view
+  - Shows marriage date, both locations, children
+  - Shows parents of both persons (X's Parents, Y's Parents)
+  - Quick links to individual profiles
+
+- [x] Fix couple selection highlighting
+  - Couple card gets green border when selected as couple
+  - Edges to both persons' parents highlighted
+  - Edges to children highlighted
+
+- [x] Reorder family members in sidebars
+  - Order: Spouse → Children → Parents → Siblings
+
+- [x] Soften light theme colors
+  - Warm off-white/cream background (#E8E4DF)
+  - Reduced eye strain with warmer tones
+
+- [x] Make dev query button more subtle
+  - Smaller size (32px instead of 40px)
+  - Muted colors instead of vibrant gradient
+
 ---
 
 ## Critical - All Fixed

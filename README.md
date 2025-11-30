@@ -49,13 +49,15 @@ npm run dev
 
 ## Features
 
-- **Interactive Canvas**: Pan, zoom, click-to-select nodes
-- **Family Visualization**: Hierarchical layout by generation
-- **Person Details**: Sidebar with full info and family navigation
+- **Interactive Canvas**: Pan, zoom, drag nodes, click-to-select
+- **Family Visualization**: Bottom-to-top hierarchical layout (ancestors at bottom)
+- **Person Details**: Sidebar with full info, AKA/nicknames, and family navigation
+- **Couple Details**: Click couple card background to see combined family view
 - **Search**: Spotlight-style search by name, profession, location
-- **Cypher Query Tool**: Execute read-only Neo4j queries
-- **Dark/Light Theme**: CSS variable-based theming
+- **Cypher Query Tool**: Execute read-only Neo4j queries (rate-limited)
+- **Dark/Light Theme**: Warm, eye-friendly color palettes
 - **Mobile Support**: Bottom sheet UI, rotate device prompt
+- **Node Dragging**: Rearrange nodes manually with reset layout button
 
 ## Project Structure
 
@@ -87,9 +89,15 @@ family_tree/
 | `/` or `Cmd+K` | Open search |
 | `Cmd+Shift+P` | Open query modal |
 | `+` / `-` | Zoom in/out |
-| `0` | Fit view |
+| `0` | Fit view / Reset layout |
 | `Escape` | Close modal/deselect |
 | Arrow keys | Navigate family members |
+
+## Selection & Highlighting
+
+- **Person Selection**: Click a person to see their details, parents, spouse, children, and siblings
+- **Couple Selection**: Click the background of a couple card to see combined family view with both sets of parents
+- **Edge Highlighting**: Green edges show blood relations (parent-child connections) when a person or couple is selected
 
 ## Local Network Access
 

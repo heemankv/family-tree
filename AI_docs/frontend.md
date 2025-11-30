@@ -144,13 +144,15 @@ interface AppState {
 
 ### 5.2 Sidebar / Bottom Sheet
 
-**Desktop (Left Panel)**:
+**Desktop (Left Panel) - Person Detail**:
 ```
 ┌──────────────────┐
 │  ┌────┐          │
 │  │ 👤 │  Name    │
 │  └────┘  Late ⚫ │
 │                  │
+│  👤 Gender       │
+│  💬 AKA: ...     │
 │  📅 Born: ...    │
 │  💀 Died: ...    │
 │  📍 Location     │
@@ -158,10 +160,35 @@ interface AppState {
 │                  │
 │  ─────────────── │
 │  Immediate Family│
-│  > Father        │
-│  > Mother        │
 │  > Spouse        │
 │  > Children (2)  │
+│  > Parents       │
+│  > Siblings      │
+└──────────────────┘
+```
+
+**Desktop (Left Panel) - Couple Detail**:
+```
+┌──────────────────┐
+│  ┌────┐ ❤ ┌────┐ │
+│  │ 👤 │   │ 👤 │ │
+│  └────┘   └────┘ │
+│   Name & Name    │
+│  Married since.. │
+│                  │
+│  📅 Marriage     │
+│  📍 Location(s)  │
+│                  │
+│  ─────────────── │
+│  Children (2)    │
+│  > Child 1       │
+│  > Child 2       │
+│  ─────────────── │
+│  X's Parents     │
+│  > Parent 1      │
+│  ─────────────── │
+│  Y's Parents     │
+│  > Parent 2      │
 └──────────────────┘
 ```
 
@@ -214,7 +241,7 @@ interface AppState {
 - Handles: Hidden (invisible)
 - Edges: Only parent→child connections (no spouse/sibling lines)
 
-### 5.5 Query Modal (Siri-style)
+### 5.5 Query Modal (Developer Tool)
 
 ```
 ┌────────────────────────────────────────┐
@@ -232,11 +259,12 @@ interface AppState {
 └────────────────────────────────────────┘
 ```
 
-- Trigger: Click Siri button in header OR keyboard shortcut (TODO)
+- Trigger: Click subtle sparkle button in header OR `Cmd+Shift+P`
 - Background: Glass-morphism (`backdrop-blur-xl bg-white/80`)
 - Input: Single line with glowing border
 - Results: Dark-mode code block (terminal aesthetic)
 - Close: Click outside or Escape key
+- **Rate Limited**: Backend enforces rate limiting on query endpoint
 
 ---
 
@@ -284,12 +312,15 @@ React Flow needs nodes with `{ id, position: {x, y}, data }` format.
 function layoutFamilyTree(persons: Person[], links: Link[], centerPersonId: string, selectedPersonId: string | null) {
   // 1. Calculate generation for each person (BFS from center)
   // 2. Group spouses into couple nodes (same generation only)
-  // 3. Position by generation (y = generation * ROW_HEIGHT)
-  // 4. Position within generation (x based on node width + gap)
-  // 5. Create only PARENT_CHILD edges (no spouse/sibling lines)
-  // 6. Return React Flow nodes and edges
+  // 3. Position by generation (y = (maxGen - gen) * ROW_HEIGHT) - BOTTOM TO TOP
+  // 4. Center each generation horizontally around x=0
+  // 5. Position children above their parents
+  // 6. Create only PARENT_CHILD edges (no spouse/sibling lines)
+  // 7. Return React Flow nodes and edges
 }
 ```
+
+**Tree Direction**: The tree grows **bottom-to-top** with ancestors at the bottom and descendants at the top. This is achieved by inverting the Y-axis calculation.
 
 ### Layout Constants
 ```typescript
@@ -310,22 +341,28 @@ const COL_GAP = 60;        // Gap between nodes
 
 ### Color Palette (CSS Variables)
 ```css
-/* globals.css - Light theme */
+/* globals.css - Light theme (warm, easy on the eyes) */
 :root {
-  --background: #EBEBEB;      /* Muted off-white canvas */
-  --surface: #F5F5F5;          /* Cards, sidebar */
-  --foreground: #1A1A1A;       /* Primary text */
-  --muted: #737373;            /* Secondary text */
-  --border: #D4D4D4;           /* Borders */
+  --background: #E8E4DF;       /* Warm off-white canvas */
+  --surface: #F0EDE8;          /* Cards, sidebar */
+  --foreground: #1C1917;       /* Primary text */
+  --muted: #57534E;            /* Secondary text */
+  --border: #D6D3CE;           /* Borders */
+  --card-bg: #F5F2ED;          /* Card backgrounds */
+  --dot-color: #C8C4BE;        /* Canvas dots */
+  --edge-color: #A8A29E;       /* Graph edges */
 }
 
-/* globals.css - Dark theme */
+/* globals.css - Dark theme (subtle dark grays) */
 .dark {
   --background: #1A1A1A;
-  --surface: #262626;
-  --foreground: #F5F5F5;
-  --muted: #A3A3A3;
-  --border: #404040;
+  --surface: #242424;
+  --foreground: #E5E5E5;
+  --muted: #9CA3AF;
+  --border: #3A3A3A;
+  --card-bg: #2A2A2A;
+  --dot-color: #404040;
+  --edge-color: #525252;
 }
 ```
 
@@ -410,6 +447,32 @@ const breakpoints = {
 - [x] Rotate device prompt - shows in portrait mode suggesting landscape
 - [x] Bottom sheet for person details (Google Maps-style)
 - [x] Local network access for mobile testing
+
+### Node Interaction ✅
+- [x] Node dragging - rearrange nodes manually
+- [x] Reset layout button - restore original positions
+- [x] Person selection - click person to see details
+- [x] Couple selection - click couple card background for combined view
+- [x] Edge highlighting - green edges for blood relations
+
+### Person Details ✅
+- [x] AKA/nicknames support
+- [x] Gender display
+- [x] Family ordering: Spouse → Children → Parents → Siblings
+
+### Couple Details ✅
+- [x] Combined view when clicking couple card background
+- [x] Marriage date display
+- [x] Location(s) - shows both if different
+- [x] Children list
+- [x] Both sets of parents (X's Parents, Y's Parents)
+- [x] Quick links to individual profiles
+
+### Theming ✅
+- [x] Dark/Light theme toggle
+- [x] Warm, eye-friendly light theme colors
+- [x] Subtle dark theme (not pure black)
+- [x] Theme persistence in localStorage
 
 ### Post-MVP Features (Not Implemented)
 - [ ] Mini-map overview
