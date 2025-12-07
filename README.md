@@ -12,7 +12,47 @@ An interactive family tree visualization application with a Google Maps-like exp
 | Backend | Go 1.21+, Gin framework |
 | Database | Neo4j (graph database) |
 
-## Quick Start
+## Quick Start with Docker (Recommended)
+
+The easiest way to run the application is using Docker Compose.
+
+### Prerequisites
+- Docker and Docker Compose
+
+### 1. Start All Services
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/family_tree.git
+cd family_tree
+
+# Start all services (Neo4j, Backend, Frontend)
+docker compose up -d
+
+# Check services are running
+docker compose ps
+```
+
+### 2. Import Sample Data
+```bash
+# Import the example family tree (35 persons, 64 relationships)
+./scripts/csv_import.sh
+```
+
+### 3. Open the Application
+- **Frontend**: http://localhost:3000
+- **Neo4j Browser**: http://localhost:7474 (login: `neo4j` / `familytree123`)
+- **Backend API**: http://localhost:8080
+
+### 4. Import Your Own Data
+See [Data Import Guide](docs/DATA_IMPORT.md) for detailed instructions on importing your family data.
+
+```bash
+# Prepare your CSV files (see docs/DATA_IMPORT.md for format)
+# Then import:
+./scripts/csv_import.sh data/your_persons.csv data/your_relationships.csv
+```
+
+## Manual Setup (Development)
 
 ### Prerequisites
 - Node.js 18+
@@ -26,15 +66,11 @@ docker run -d --name neo4j \
   -p 7474:7474 -p 7687:7687 \
   -e NEO4J_AUTH=neo4j/familytree123 \
   neo4j:5.15.0-community
-
-# Seed sample data
-./scripts/neo4j_seed.sh
 ```
 
 ### 2. Backend
 ```bash
 cd backend
-export MOCK_DATA=true  # Use mock data (no Neo4j needed)
 go run cmd/server/main.go
 # Runs on http://localhost:8080
 ```
@@ -114,12 +150,63 @@ cd frontend
 NEXT_PUBLIC_API_URL=http://<your-ip>:8080 npm run dev -- -H 0.0.0.0
 ```
 
+## Configuration
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and customize:
+
+```bash
+cp .env.example .env
+```
+
+Key variables:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BACKEND_PORT` | `8080` | Port for backend API |
+| `FRONTEND_PORT` | `3000` | Port for frontend |
+| `NEO4J_PASSWORD` | `familytree123` | Neo4j password |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8080` | API URL for frontend |
+
+### Port Conflicts
+
+If ports are in use, change them in `.env`:
+```bash
+BACKEND_PORT=8081
+FRONTEND_PORT=3001
+NEXT_PUBLIC_API_URL=http://localhost:8081
+```
+
 ## Documentation
 
-See `AI_docs/` for detailed documentation:
-- **database.md**: Neo4j schema, relationships, Cypher queries
-- **backend.md**: API specification, models, rate limiting
-- **frontend.md**: Components, state management, styling
+| Document | Description |
+|----------|-------------|
+| [Data Import Guide](docs/DATA_IMPORT.md) | How to import your family data |
+| [AI_docs/database.md](AI_docs/database.md) | Neo4j schema, relationships, Cypher queries |
+| [AI_docs/backend.md](AI_docs/backend.md) | API specification, models, rate limiting |
+| [AI_docs/frontend.md](AI_docs/frontend.md) | Components, state management, styling |
+
+## Docker Commands
+
+```bash
+# Start all services
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop all services
+docker compose down
+
+# Rebuild after code changes
+docker compose build --no-cache
+docker compose up -d
+
+# Clear database and start fresh
+docker compose down -v
+docker compose up -d
+./scripts/csv_import.sh
+```
 
 ## License
 

@@ -41,6 +41,21 @@ run_cypher() {
     fi
 }
 
+# Function to parse CSV field (handles quoted fields with commas)
+# Usage: parse_csv_line "csv_line" field_number (0-indexed)
+parse_csv_field() {
+    echo "$1" | python3 -c "
+import csv
+import sys
+reader = csv.reader([sys.stdin.read().strip()])
+for row in reader:
+    if len(row) > $2:
+        print(row[$2])
+    else:
+        print('')
+"
+}
+
 # Create constraints
 echo "Creating constraints..."
 run_cypher "CREATE CONSTRAINT person_id_unique IF NOT EXISTS FOR (p:Person) REQUIRE p.id IS UNIQUE;"
@@ -50,21 +65,24 @@ run_cypher "CREATE INDEX person_name_index IF NOT EXISTS FOR (p:Person) ON (p.na
 echo "Importing persons..."
 PERSON_COUNT=0
 
-# Skip header and process each line
-tail -n +2 "$PERSONS_CSV" | while IFS=, read -r id name aka gender is_alive birth_date death_date current_location profession photo_url; do
-    # Clean up values (remove quotes and trim)
-    id=$(echo "$id" | tr -d '"' | xargs)
-    name=$(echo "$name" | tr -d '"' | xargs)
-    aka=$(echo "$aka" | tr -d '"' | xargs)
-    gender=$(echo "$gender" | tr -d '"' | xargs)
-    is_alive=$(echo "$is_alive" | tr -d '"' | xargs | tr '[:upper:]' '[:lower:]')
-    birth_date=$(echo "$birth_date" | tr -d '"' | xargs)
-    death_date=$(echo "$death_date" | tr -d '"' | xargs)
-    current_location=$(echo "$current_location" | tr -d '"' | xargs)
-    profession=$(echo "$profession" | tr -d '"' | xargs)
-    photo_url=$(echo "$photo_url" | tr -d '"' | xargs)
-
+# Skip header and process each line using Python for proper CSV parsing
+tail -n +2 "$PERSONS_CSV" | while IFS= read -r line || [ -n "$line" ]; do
     # Skip empty lines
+    [ -z "$line" ] && continue
+
+    # Parse CSV fields using Python (handles quoted fields correctly)
+    id=$(echo "$line" | python3 -c "import csv,sys; r=list(csv.reader([sys.stdin.read().strip()]))[0]; print(r[0] if len(r)>0 else '')")
+    name=$(echo "$line" | python3 -c "import csv,sys; r=list(csv.reader([sys.stdin.read().strip()]))[0]; print(r[1] if len(r)>1 else '')")
+    aka=$(echo "$line" | python3 -c "import csv,sys; r=list(csv.reader([sys.stdin.read().strip()]))[0]; print(r[2] if len(r)>2 else '')")
+    gender=$(echo "$line" | python3 -c "import csv,sys; r=list(csv.reader([sys.stdin.read().strip()]))[0]; print(r[3] if len(r)>3 else '')")
+    is_alive=$(echo "$line" | python3 -c "import csv,sys; r=list(csv.reader([sys.stdin.read().strip()]))[0]; print(r[4].lower() if len(r)>4 else '')")
+    birth_date=$(echo "$line" | python3 -c "import csv,sys; r=list(csv.reader([sys.stdin.read().strip()]))[0]; print(r[5] if len(r)>5 else '')")
+    death_date=$(echo "$line" | python3 -c "import csv,sys; r=list(csv.reader([sys.stdin.read().strip()]))[0]; print(r[6] if len(r)>6 else '')")
+    current_location=$(echo "$line" | python3 -c "import csv,sys; r=list(csv.reader([sys.stdin.read().strip()]))[0]; print(r[7] if len(r)>7 else '')")
+    profession=$(echo "$line" | python3 -c "import csv,sys; r=list(csv.reader([sys.stdin.read().strip()]))[0]; print(r[8] if len(r)>8 else '')")
+    photo_url=$(echo "$line" | python3 -c "import csv,sys; r=list(csv.reader([sys.stdin.read().strip()]))[0]; print(r[9] if len(r)>9 else '')")
+
+    # Skip if no ID
     [ -z "$id" ] && continue
 
     # Convert is_alive to boolean
@@ -72,29 +90,6 @@ tail -n +2 "$PERSONS_CSV" | while IFS=, read -r id name aka gender is_alive birt
         is_alive_val="true"
     else
         is_alive_val="false"
-    fi
-
-    # Build aka array
-    if [ -n "$aka" ]; then
-        # Convert comma-separated aka to array format
-        aka_array=$(echo "$aka" | sed 's/, */", "/g')
-        aka_prop="aka: [\"$aka_array\"],"
-    else
-        aka_prop=""
-    fi
-
-    # Build death_date property
-    if [ -n "$death_date" ]; then
-        death_prop="death_date: \"$death_date\","
-    else
-        death_prop="death_date: null,"
-    fi
-
-    # Build photo_url property
-    if [ -n "$photo_url" ]; then
-        photo_prop="photo_url: \"$photo_url\""
-    else
-        photo_prop="photo_url: \"\""
     fi
 
     # Create person node
@@ -105,13 +100,15 @@ SET p.name = \"$name\",
     p.birth_date = \"$birth_date\",
     p.current_location = \"$current_location\",
     p.profession = \"$profession\",
-    p.photo_url = \"${photo_url:-}\"
-"
+    p.photo_url = \"${photo_url:-}\""
 
-    # Add aka if present
+    # Add aka if present (split by comma and create array)
     if [ -n "$aka" ]; then
-        aka_array=$(echo "$aka" | sed 's/, */", "/g')
-        CYPHER="$CYPHER SET p.aka = [\"$aka_array\"]"
+        # Convert "Bill, Big Will" to ["Bill", "Big Will"]
+        aka_array=$(echo "$aka" | python3 -c "import sys; parts=[p.strip() for p in sys.stdin.read().strip().split(',')]; print('[' + ', '.join(['\"'+p+'\"' for p in parts if p]) + ']')")
+        CYPHER="$CYPHER SET p.aka = $aka_array"
+    else
+        CYPHER="$CYPHER SET p.aka = []"
     fi
 
     # Add death_date if present
