@@ -14,16 +14,25 @@ An interactive family tree visualization application with a Google Maps-like exp
 
 ## Quick Start with Docker (Recommended)
 
-The easiest way to run the application is using Docker Compose.
+The easiest way to run the application is using Docker Compose with pre-built images.
 
 ### Prerequisites
 - Docker and Docker Compose
 
-### 1. Start All Services
+### Option 1: Using Pre-built Images (Fastest)
+```bash
+# Download the production compose file
+curl -O https://raw.githubusercontent.com/heemankv/family-tree/master/docker-compose.prod.yml
+
+# Start all services
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Option 2: Build from Source
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/family_tree.git
-cd family_tree
+git clone https://github.com/heemankv/family-tree.git
+cd family-tree
 
 # Start all services (Neo4j, Backend, Frontend)
 docker compose up -d
@@ -189,8 +198,11 @@ NEXT_PUBLIC_API_URL=http://localhost:8081
 ## Docker Commands
 
 ```bash
-# Start all services
+# Start all services (build from source)
 docker compose up -d
+
+# Start with pre-built images
+docker compose -f docker-compose.prod.yml up -d
 
 # View logs
 docker compose logs -f
@@ -207,6 +219,22 @@ docker compose down -v
 docker compose up -d
 ./scripts/csv_import.sh
 ```
+
+## Docker Images
+
+Pre-built multi-platform images are available on GitHub Container Registry:
+
+```bash
+# Backend (linux/amd64, linux/arm64)
+docker pull ghcr.io/heemankv/family-tree/backend:latest
+
+# Frontend (linux/amd64, linux/arm64)
+docker pull ghcr.io/heemankv/family-tree/frontend:latest
+```
+
+Supported platforms:
+- `linux/amd64` - Intel/AMD processors
+- `linux/arm64` - Apple Silicon (M1/M2/M3), ARM servers, Raspberry Pi 4
 
 ## License
 
