@@ -23,3 +23,10 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Original Data
+frontend/public/images/original/
+frontend/public/images/processed/
+real_data
+
+node_modules/

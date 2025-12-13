@@ -173,13 +173,13 @@ export function BottomSheet() {
   // Portrait mode: Standard bottom sheet
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - only show in full mode */}
       <div
         className={cn(
           'fixed inset-0 bg-black/20 z-40 transition-opacity duration-300',
-          sheetState !== 'collapsed' ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          sheetState === 'full' ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
-        onClick={() => setSheetState('collapsed')}
+        onClick={() => setSheetState('half')}
       />
 
       {/* Bottom Sheet */}

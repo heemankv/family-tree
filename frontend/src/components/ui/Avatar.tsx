@@ -58,17 +58,20 @@ function AvatarComponent({ person, size = 'md', className }: AvatarProps) {
     setHasError(true);
   }, []);
 
+  const hasProcessedImage = person.photo_url?.includes('/images/processed/');
+
   return (
-    <img
-      src={imageSrc}
-      alt={person.name}
-      onError={handleError}
-      className={cn(
-        'rounded-full object-cover',
-        SIZE_CLASSES[size],
-        className
-      )}
-    />
+    <div className={cn('relative', SIZE_CLASSES[size], className)}>
+      <img
+        src={imageSrc}
+        alt={person.name}
+        onError={handleError}
+        className={cn(
+          'rounded-full object-cover w-full h-full',
+          hasProcessedImage && 'bg-gradient-to-br from-blue-50 to-purple-50'
+        )}
+      />
+    </div>
   );
 }
 

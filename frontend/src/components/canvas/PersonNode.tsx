@@ -59,7 +59,7 @@ function PersonNodeComponent({ data }: PersonNodeProps) {
       {isMe && (
         <div className={ME_BADGE_STYLES}>
           <Star className="w-2.5 h-2.5 fill-current" />
-          You
+          Me
         </div>
       )}
 

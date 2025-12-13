@@ -40,7 +40,7 @@ export const Badge = memo(function Badge({
 export const LateBadge = memo(function LateBadge() {
   return (
     <Badge variant="secondary" className={LATE_BADGE_STYLES}>
-      Late
+      Late 🕉️
     </Badge>
   );
 });

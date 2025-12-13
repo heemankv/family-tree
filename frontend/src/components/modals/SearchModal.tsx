@@ -154,7 +154,7 @@ export function SearchModal() {
                       </div>
                       {!person.is_alive && (
                         <span className="text-xs text-muted bg-background px-2 py-0.5 rounded">
-                          Late
+                          Late 🕉️
                         </span>
                       )}
                     </button>

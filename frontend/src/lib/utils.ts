@@ -18,8 +18,30 @@ function isValidDate(date: Date): boolean {
 
 /**
  * Parse a date string safely
+ * Supports formats: DD-MM-YYYY, YYYY-MM-DD, ISO dates
  */
 function parseDate(dateString: string): Date | null {
+  if (!dateString || dateString.trim() === '') {
+    return null;
+  }
+
+  // Try DD-MM-YYYY format first (most common in CSV)
+  const ddmmyyyyMatch = dateString.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (ddmmyyyyMatch) {
+    const [, day, month, year] = ddmmyyyyMatch;
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return isValidDate(date) ? date : null;
+  }
+
+  // Try YYYY-MM-DD format
+  const yyyymmddMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (yyyymmddMatch) {
+    const [, year, month, day] = yyyymmddMatch;
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return isValidDate(date) ? date : null;
+  }
+
+  // Fallback to native Date parsing (ISO dates, etc.)
   const date = new Date(dateString);
   return isValidDate(date) ? date : null;
 }

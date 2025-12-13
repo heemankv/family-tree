@@ -11,7 +11,7 @@ import {
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { CoupleSelection, Person } from '@/types';
-import { formatDate } from '@/lib/utils';
+import { formatDate, getYear } from '@/lib/utils';
 
 interface CoupleDetailProps {
   couple: CoupleSelection;
@@ -32,7 +32,7 @@ export function CoupleDetail({ couple, onClose, onPersonClick, compact = false }
       <div className="h-full flex flex-col">
         {/* Compact Details - single line */}
         <div className="px-4 py-2 flex items-center gap-4 text-xs border-b border-border">
-          {marriageDate && <span className="text-muted">Married {formatDate(marriageDate).split(',')[0]}</span>}
+          {marriageDate && <span className="text-muted">Married {formatDate(marriageDate).split(',')[0]}, {getYear(marriageDate)}</span>}
           <span className="text-muted truncate">{locations.join(' & ')}</span>
         </div>
 
@@ -152,7 +152,7 @@ export function CoupleDetail({ couple, onClose, onPersonClick, compact = false }
 
         {marriageDate && (
           <p className="text-muted text-sm">
-            Married since {formatDate(marriageDate).split(',')[0]}
+            Married since {formatDate(marriageDate).split(',')[0]}, {getYear(marriageDate)}
           </p>
         )}
       </div>

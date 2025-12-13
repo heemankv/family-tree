@@ -187,3 +187,16 @@ Current message is adequate.
 - [ ] Zoom to fit selected person's immediate family
 - [ ] Timeline view (chronological events)
 - [ ] Statistics dashboard (total people, generations, etc.)
+
+---
+
+## Pending Tasks
+
+### Update ME_PERSON_ID to 'me'
+- [ ] Update ME_PERSON_ID constant in `frontend/src/lib/constants.ts` to `'me'`
+- [ ] Update CSV file - change the main person's ID from current ID to `'me'`
+- [ ] Update all relationship entries in CSV that reference the old ID
+- [ ] Re-import CSV to Neo4j to reflect the ID change
+- [ ] Test that "me" highlighting still works with new ID
+
+**Note:** This will make the special "me" person have a consistent, unique ID of `'me'` instead of a generated ID like `a1b2`

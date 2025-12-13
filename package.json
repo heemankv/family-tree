@@ -1,0 +1,19 @@
+{
+  "name": "family-tree-scripts",
+  "version": "1.0.0",
+  "description": "Image processing scripts for family tree",
+  "private": true,
+  "scripts": {
+    "process-images": "node scripts/process-images.js",
+    "process-existing": "node scripts/process-existing-images.js",
+    "resize-only": "node scripts/resize-images-only.js",
+    "convert-to-png": "node scripts/convert-jpeg-to-png.js"
+  },
+  "dependencies": {
+    "@imgly/background-removal-node": "^1.4.5",
+    "sharp": "^0.33.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
